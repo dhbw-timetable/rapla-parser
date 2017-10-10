@@ -35,17 +35,18 @@ public final class DataImporter {
 
 	private DataImporter() {}
 
-    public static Map<LocalDate, ArrayList<Appointment>> ImportDateRange(LocalDate startDate, LocalDate endDate, String url) throws MalformedURLException, NoConnectionException, SAXException, IOException, ParserConfigurationException {
+    public static Map<LocalDate, ArrayList<Appointment>> ImportDateRange(LocalDate startDate, LocalDate endDate, String url) throws MalformedURLException, NoConnectionException, IllegalAccessException {
 		if(!NetworkUtilities.URLIsValid(url)) {
 			throw new MalformedURLException();
         } else if (!NetworkUtilities.TestConnection(url)) {
 			throw new NoConnectionException(url);
 		}
-        int urlSplit = url.indexOf("/rapla?", 8);
-		return ImportDateRange(startDate, endDate, BaseURL.valueOf(url.substring(0, urlSplit)), url.substring(urlSplit));
+		final String deSuffix = ".de/rapla?";
+        int urlSplit = url.indexOf(deSuffix);
+		return ImportDateRange(startDate, endDate, BaseURL.valueOf(url.substring(19, urlSplit).toUpperCase()), url.substring(urlSplit + deSuffix.length()));
     }
 
-    public static Map<LocalDate, ArrayList<Appointment>> ImportDateRange(LocalDate startDate, LocalDate endDate, BaseURL baseURL, String args) {
+    public static Map<LocalDate, ArrayList<Appointment>> ImportDateRange(LocalDate startDate, LocalDate endDate, BaseURL baseURL, String args) throws IllegalAccessException {
 		Map<LocalDate, ArrayList<Appointment>> appointments = new HashMap<>();
 		startDate = DateUtilities.Normalize(startDate);
 		endDate = DateUtilities.Normalize(endDate);
@@ -53,8 +54,10 @@ public final class DataImporter {
 		do {
             try {
                 appointments.put(startDate, ImportWeek(startDate, baseURL, args));
-            } catch (SAXException | IOException | ParserConfigurationException | IllegalAccessException e) {
+            } catch (SAXException | IOException | ParserConfigurationException e) {
                 e.printStackTrace();
+            } catch (IllegalAccessException e ) {
+                throw e;
             }
             startDate = startDate.plusDays(7);
 		} while (!startDate.isAfter(endDate));
@@ -70,10 +73,11 @@ public final class DataImporter {
 		StringBuilder connectionURL = new StringBuilder(baseURL.complete()).append("?");
 		String line, pageContent;
 
+		// TODO The parameters here are the same each week. define them and just pass connectionURL to ImportWeek
 		Map<String, String> params = new HashMap<String, String>();
 		String[] paramsStrings = args.split("&");
 		for (int i = 0; i < paramsStrings.length; i++) {
-		    String[] kvStrings = args.split("=");
+		    String[] kvStrings = paramsStrings[i].split("=");
 		    for (int j = 0; j < kvStrings.length; j++) {
 		        params.put(kvStrings[0], kvStrings[1]);
             }
@@ -82,13 +86,7 @@ public final class DataImporter {
 		// Establish connection to date
         // key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo&today=Heute
 		if (params.containsKey("key")) {
-		    String key = args.substring(args.lastIndexOf("key="));
-		    int keyEnd = key.indexOf("&");
-		    // if key is not the last arg (end symbol found), trim also the right side
-            if (keyEnd > -1) {
-                key = key.substring(0, keyEnd);
-            }
-            connectionURL.append(key);
+            connectionURL.append("key=").append(params.get("key"));
         // page=calendar&user=vollmer&file=tinf15b3&today=Heute
         } else if (params.containsKey("page") && params.get("page").equalsIgnoreCase("calendar") && params.containsKey("user") && params.containsKey("file")) {
             connectionURL.append("page=calendar&user=").append(params.get("user")).append("&file=").append(params.get("file"));
