@@ -18,7 +18,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import com.sun.xml.internal.rngom.parse.host.Base;
 import dhbw.timetable.rablabla.data.excpetions.NoConnectionException;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
@@ -35,19 +34,26 @@ public final class DataImporter {
 
 	private DataImporter() {}
 
-    public static Map<LocalDate, ArrayList<Appointment>> ImportDateRange(LocalDate startDate, LocalDate endDate, String url) throws MalformedURLException, NoConnectionException, IllegalAccessException {
-		if(!NetworkUtilities.URLIsValid(url)) {
-			throw new MalformedURLException();
-        } else if (!NetworkUtilities.TestConnection(url)) {
-			throw new NoConnectionException(url);
-		}
-		final String deSuffix = ".de/rapla?";
-        int urlSplit = url.indexOf(deSuffix);
-		return ImportDateRange(startDate, endDate, BaseURL.valueOf(url.substring(19, urlSplit).toUpperCase()), url.substring(urlSplit + deSuffix.length()));
+    private static void checkConnection(String fullURL) throws MalformedURLException, NoConnectionException {
+        if(!NetworkUtilities.URLIsValid(fullURL)) {
+            throw new MalformedURLException();
+        } else if (!NetworkUtilities.TestConnection(fullURL)) {
+            throw new NoConnectionException(fullURL);
+        }
     }
 
-    public static Map<LocalDate, ArrayList<Appointment>> ImportDateRange(LocalDate startDate, LocalDate endDate, BaseURL baseURL, String args) throws IllegalAccessException {
-		Map<LocalDate, ArrayList<Appointment>> appointments = new HashMap<>();
+    public static Map<LocalDate, ArrayList<Appointment>> ImportWeekRange(LocalDate startDate, LocalDate endDate, String url) throws MalformedURLException, NoConnectionException, IllegalAccessException {
+        checkConnection(url);
+
+		final String deSuffix = ".de/rapla?";
+        int urlSplit = url.indexOf(deSuffix);
+		return ImportWeekRange(startDate, endDate, BaseURL.valueOf(url.substring(19, urlSplit).toUpperCase()), url.substring(urlSplit + deSuffix.length()));
+    }
+
+    public static Map<LocalDate, ArrayList<Appointment>> ImportWeekRange(LocalDate startDate, LocalDate endDate, BaseURL baseURL, String args) throws MalformedURLException, NoConnectionException, IllegalAccessException {
+        checkConnection(baseURL.complete() + args);
+
+	    Map<LocalDate, ArrayList<Appointment>> appointments = new HashMap<>();
 		startDate = DateUtilities.Normalize(startDate);
 		endDate = DateUtilities.Normalize(endDate);
 		
@@ -173,9 +179,7 @@ public final class DataImporter {
 		
 		LocalDateTime[] times = DateUtilities.ConvertToTime(date, time);
 		
-		Appointment a = new Appointment(times[0], times[1], course, info);
-
-		return a;
+		return new Appointment(times[0], times[1], course, info);
 	}
 
 	private static String importInfoFromSpan(NodeList spanTableRows) {
