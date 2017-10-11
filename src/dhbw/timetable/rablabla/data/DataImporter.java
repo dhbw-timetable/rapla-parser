@@ -12,7 +12,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -29,31 +31,43 @@ import org.xml.sax.SAXException;
 
 /**
  * Created by Hendrik Ulbrich (C) 2017
+ *
+ * This is a parser for the rapla website. It is implemented as a singleton.
+ * Use the public import methods to import events into appointment structure.
  */
 public final class DataImporter {
 
-	private DataImporter() {}
-
-    private static void checkConnection(String fullURL) throws MalformedURLException, NoConnectionException {
-        if(!NetworkUtilities.URLIsValid(fullURL)) {
-            throw new MalformedURLException();
-        } else if (!NetworkUtilities.TestConnection(fullURL)) {
-            throw new NoConnectionException(fullURL);
-        }
-    }
-
+    /**
+     * Imports all appointments from the given url which are in the parameters week range
+     * @param startDate A day of the week to start (include)
+     * @param endDate A day of the week to end (include)
+     * @param url The complete url with the protocol and all arguments
+     * @return Map<LocalDate, ArrayList<Appointment>> events ordered through weeks
+     * @throws MalformedURLException If the passed url does not match pattern
+     * @throws NoConnectionException If the server could not be reached
+     * @throws IllegalAccessException If the passed arguments don't match
+     */
     public static Map<LocalDate, ArrayList<Appointment>> ImportWeekRange(LocalDate startDate, LocalDate endDate, String url) throws MalformedURLException, NoConnectionException, IllegalAccessException {
-        checkConnection(url);
-
 		final String deSuffix = ".de/rapla?";
         int urlSplit = url.indexOf(deSuffix);
-		return ImportWeekRange(startDate, endDate, BaseURL.valueOf(url.substring(19, urlSplit).toUpperCase()), url.substring(urlSplit + deSuffix.length()));
+		return ImportWeekRange(startDate, endDate, BaseURL.valueOf(url.substring("https://rapla.dhbw-".length(), urlSplit).toUpperCase()), url.substring(urlSplit + deSuffix.length()));
     }
 
+    /**
+     * Imports all appointments from the given url data which are in the parameters week range
+     * @param startDate A day of the week to start (include)
+     * @param endDate A day of the week to end (include)
+     * @param baseURL The host enum dhbw.timetable.rablabla.data.BaseURL
+     * @param args Arguments such as key | (user & page & file)
+     * @return Map<LocalDate, ArrayList<Appointment>> events ordered through weeks
+     * @throws MalformedURLException If the passed url does not match pattern
+     * @throws NoConnectionException If the server could not be reached
+     * @throws IllegalAccessException If the passed arguments don't match
+     */
     public static Map<LocalDate, ArrayList<Appointment>> ImportWeekRange(LocalDate startDate, LocalDate endDate, BaseURL baseURL, String args) throws MalformedURLException, NoConnectionException, IllegalAccessException {
         checkConnection(baseURL.complete() + args);
 
-	    Map<LocalDate, ArrayList<Appointment>> appointments = new HashMap<>();
+	    Map<LocalDate, ArrayList<Appointment>> appointments = new LinkedHashMap<>();
 		startDate = DateUtilities.Normalize(startDate);
 		endDate = DateUtilities.Normalize(endDate);
 		
@@ -71,6 +85,17 @@ public final class DataImporter {
 		return appointments;
 	}
 
+    /**
+     * Imports all events of the week
+     * @param localDate A day of the week to import
+     * @param baseURL The host enum dhbw.timetable.rablabla.data.BaseURL
+     * @param args Arguments such as key | (user & page & file)
+     * @return Unordered list of appointments scheduled for this week
+     * @throws SAXException If the DOM is malformed
+     * @throws IOException If input could not be loaded
+     * @throws ParserConfigurationException If the parsing failed
+     * @throws IllegalAccessException If the passed arguments don't match
+     */
 	public static ArrayList<Appointment> ImportWeek(LocalDate localDate, BaseURL baseURL, String args) throws SAXException, IOException, ParserConfigurationException, IllegalAccessException {
 		localDate = DateUtilities.Normalize(localDate);
 		
@@ -82,11 +107,9 @@ public final class DataImporter {
 		// TODO The parameters here are the same each week. define them and just pass connectionURL to ImportWeek
 		Map<String, String> params = new HashMap<String, String>();
 		String[] paramsStrings = args.split("&");
-		for (int i = 0; i < paramsStrings.length; i++) {
-		    String[] kvStrings = paramsStrings[i].split("=");
-		    for (int j = 0; j < kvStrings.length; j++) {
-		        params.put(kvStrings[0], kvStrings[1]);
-            }
+        for (String paramsString : paramsStrings) {
+            String[] kvStrings = paramsString.split("=");
+            IntStream.range(0, kvStrings.length).forEach(j -> params.put(kvStrings[0], kvStrings[1]));
         }
 
 		// Establish connection to date
@@ -133,7 +156,17 @@ public final class DataImporter {
 		return weekAppointments;
 	}
 
-	private static void importTableRow(ArrayList<Appointment> appointments, Node tableRow, LocalDate currDate) {
+    private DataImporter() {}
+
+    private static void checkConnection(String fullURL) throws MalformedURLException, NoConnectionException {
+        if(!NetworkUtilities.URLIsValid(fullURL)) {
+            throw new MalformedURLException();
+        } else if (!NetworkUtilities.TestConnection(fullURL)) {
+            throw new NoConnectionException(fullURL);
+        }
+    }
+
+    private static void importTableRow(ArrayList<Appointment> appointments, Node tableRow, LocalDate currDate) {
 		// For each <td> in row
 		NodeList cells = tableRow.getChildNodes();
 		for (int i = 0; i < cells.getLength(); i++) {
@@ -167,7 +200,7 @@ public final class DataImporter {
 			time = timeData.substring(0, 5).concat(timeData.substring(6));
 		}
 
-		// If no course is provieded it may be holiday or special event
+		// If no course is provided it may be holiday or special event
 		String course, info;
 		if (aChildren.item(2 + correctShift).getNodeType() == Node.ELEMENT_NODE) {
 			course = "No course specified";
