@@ -158,6 +158,12 @@ public final class DataImporter {
 
     private DataImporter() {}
 
+    /**
+     * Checks if the URL pattern matches a regular expression and pings the server
+     * @param fullURL The full URL to test against
+     * @throws MalformedURLException If the passed url does not match pattern
+     * @throws NoConnectionException If the server could not be reached
+     */
     private static void checkConnection(String fullURL) throws MalformedURLException, NoConnectionException {
         if(!NetworkUtilities.URLIsValid(fullURL)) {
             throw new MalformedURLException();
@@ -166,6 +172,12 @@ public final class DataImporter {
         }
     }
 
+    /**
+     * Inserts any appointments from the horizontal row to the container list.
+     * @param appointments Container to insert appointment into
+     * @param tableRow The horizontal row node
+     * @param currDate Date for the start of the row
+     */
     private static void importTableRow(ArrayList<Appointment> appointments, Node tableRow, LocalDate currDate) {
 		// For each <td> in row
 		NodeList cells = tableRow.getChildNodes();
@@ -184,6 +196,12 @@ public final class DataImporter {
 		}
 	}
 
+    /**
+     * Parses a node into an appointment for the given date.
+     * @param block The appointments week_block node
+     * @param date The given date
+     * @return Imported appointment
+     */
 	private static Appointment importAppointment(Node block, LocalDate date) {
 		Node aNode = block.getFirstChild();
 		NodeList aChildren = aNode.getChildNodes();
