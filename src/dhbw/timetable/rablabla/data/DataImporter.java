@@ -46,9 +46,10 @@ public final class DataImporter {
      * @throws IllegalAccessException If the passed arguments don't match
      */
     public static Map<LocalDate, ArrayList<Appointment>> ImportWeekRange(LocalDate startDate, LocalDate endDate, String url) throws MalformedURLException, NoConnectionException, IllegalAccessException {
-		final String deSuffix = ".de/rapla?";
+		final String deSuffix = ".de/rapla?", cityPrefix = "dhbw-";
         int urlSplit = url.indexOf(deSuffix);
-		return ImportWeekRange(startDate, endDate, BaseURL.valueOf(url.substring("https://rapla.dhbw-".length(), urlSplit).toUpperCase()), url.substring(urlSplit + deSuffix.length()));
+        final String regularPrefix = url.substring(0, url.indexOf(cityPrefix));
+		return ImportWeekRange(startDate, endDate, BaseURL.valueOf(url.substring(regularPrefix.length() + cityPrefix.length(), urlSplit).toUpperCase()), url.substring(urlSplit + deSuffix.length()));
     }
 
     /**
