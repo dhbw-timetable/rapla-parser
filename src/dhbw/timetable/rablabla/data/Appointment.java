@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 /**
- * An immutable struct concept based class for storing the appointment data of the lectures.s
+ * An immutable struct concept based class for storing the appointment data of the lectures.
  * 
  * Created by Hendrik Ulbrich (C) 2017
  */
@@ -61,7 +61,10 @@ public final class Appointment {
 
 	@Override
 	public String toString() {
-		return getDate() + "\t" + getStartTime() + "-" + getEndTime() + "\t" + course + "\t" + info;
+		return new StringBuilder().append(getDate())
+				.append("\t").append(getStartTime()).append("-").append(getEndTime())
+				.append("\t").append(course)
+				.append("\t").append(info).toString();
 	}
 
 	@Override

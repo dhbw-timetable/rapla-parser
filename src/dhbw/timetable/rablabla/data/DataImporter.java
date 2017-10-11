@@ -10,10 +10,8 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -74,7 +72,8 @@ public final class DataImporter {
 		do {
             try {
                 appointments.put(startDate, ImportWeek(startDate, baseURL, args));
-            } catch (SAXException | IOException | ParserConfigurationException e) {
+            } catch (IOException | ParserConfigurationException e) {
+            	System.out.println("FAIL!" + System.lineSeparator() + "Error date: " + startDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
                 e.printStackTrace();
             } catch (IllegalAccessException e ) {
                 throw e;
@@ -96,7 +95,7 @@ public final class DataImporter {
      * @throws ParserConfigurationException If the parsing failed
      * @throws IllegalAccessException If the passed arguments don't match
      */
-	public static ArrayList<Appointment> ImportWeek(LocalDate localDate, BaseURL baseURL, String args) throws SAXException, IOException, ParserConfigurationException, IllegalAccessException {
+	public static ArrayList<Appointment> ImportWeek(LocalDate localDate, BaseURL baseURL, String args) throws IOException, ParserConfigurationException, IllegalAccessException {
 		localDate = DateUtilities.Normalize(localDate);
 		
 		ArrayList<Appointment> weekAppointments = new ArrayList<>();
@@ -105,12 +104,12 @@ public final class DataImporter {
 		String line, pageContent;
 
 		// TODO The parameters here are the same each week. define them and just pass connectionURL to ImportWeek
-		Map<String, String> params = new HashMap<String, String>();
+		HashMap<String, String> params = new HashMap<String, String>();
 		String[] paramsStrings = args.split("&");
-        for (String paramsString : paramsStrings) {
-            String[] kvStrings = paramsString.split("=");
-            IntStream.range(0, kvStrings.length).forEach(j -> params.put(kvStrings[0], kvStrings[1]));
-        }
+		for (String paramsString : paramsStrings) {
+			String[] kvStrings = paramsString.split("=");
+			IntStream.range(0, kvStrings.length).forEach(j -> params.put(kvStrings[0], kvStrings[1]));
+		}
 
 		// Establish connection to date
         // key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo&today=Heute
@@ -141,17 +140,24 @@ public final class DataImporter {
 		// Parse the document
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		Document doc = dBuilder.parse(new InputSource(new ByteArrayInputStream(pageContent.getBytes("utf-8"))));
-		doc.getDocumentElement().normalize();
+		try {
+            Document doc = dBuilder.parse(new InputSource(new ByteArrayInputStream(pageContent.getBytes("utf-8"))));
+            doc.getDocumentElement().normalize();
 
-		// Scan the table row by row
-		NodeList nList = doc.getDocumentElement().getChildNodes();
-		Node tableRow;
-		for (int temp = 0; temp < nList.getLength(); temp++) {
-			tableRow = nList.item(temp);
-			if (tableRow.getNodeType() == Node.ELEMENT_NODE)
-				importTableRow(weekAppointments, tableRow, DateUtilities.Clone(localDate));
-		}
+            // Scan the table row by row
+            NodeList nList = doc.getDocumentElement().getChildNodes();
+            Node tableRow;
+            for (int temp = 0; temp < nList.getLength(); temp++) {
+                tableRow = nList.item(temp);
+                if (tableRow.getNodeType() == Node.ELEMENT_NODE)
+                    importTableRow(weekAppointments, tableRow, DateUtilities.Clone(localDate));
+            }
+
+        } catch (SAXException e) {
+		    System.out.println("FAIL!");
+		    System.out.println("Error while parsing:" + System.lineSeparator() + pageContent);
+            e.printStackTrace();
+        }
 
 		return weekAppointments;
 	}
