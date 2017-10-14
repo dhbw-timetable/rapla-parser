@@ -69,10 +69,31 @@ public final class DataImporter {
 	    Map<LocalDate, ArrayList<Appointment>> appointments = new LinkedHashMap<>();
 		startDate = DateUtilities.Normalize(startDate);
 		endDate = DateUtilities.Normalize(endDate);
-		
+
+        final StringBuilder connectionURLBuilder = new StringBuilder(baseURL.complete()).append("?");
+        HashMap<String, String> params = new HashMap<String, String>();
+        String[] paramsStrings = args.split("&");
+        for (String paramsString : paramsStrings) {
+            String[] kvStrings = paramsString.split("=");
+            IntStream.range(0, kvStrings.length).forEach(j -> params.put(kvStrings[0], kvStrings[1]));
+        }
+
+        // Establish connection to date
+        // key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo&today=Heute
+        if (params.containsKey("key")) {
+            connectionURLBuilder.append("key=").append(params.get("key"));
+        // page=calendar&user=vollmer&file=tinf15b3&today=Heute
+        } else if (params.containsKey("page") && params.get("page").equalsIgnoreCase("calendar") && params.containsKey("user") && params.containsKey("file")) {
+            connectionURLBuilder.append("page=calendar&user=").append(params.get("user")).append("&file=").append(params.get("file"));
+        } else {
+            throw new IllegalAccessException();
+        }
+
+        final String connectionURL = connectionURLBuilder.toString();
+
 		do {
             try {
-                appointments.put(startDate, ImportWeek(startDate, baseURL, args));
+                appointments.put(startDate, ImportWeek(startDate, connectionURL + "&day=" + startDate.getDayOfMonth() + "&month=" + startDate.getMonthValue() + "&year=" + startDate.getYear()));
             } catch (IOException | ParserConfigurationException e) {
             	System.out.println("FAIL!" + System.lineSeparator() + "Error date: " + startDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
                 e.printStackTrace();
@@ -88,44 +109,19 @@ public final class DataImporter {
     /**
      * Imports all events of the week
      * @param localDate A day of the week to import
-     * @param baseURL The host enum dhbw.timetable.rablabla.data.BaseURL
-     * @param args Arguments such as key | (user & page & file)
+     * @param connectionURL The host enum dhbw.timetable.rablabla.data.BaseURL
      * @return Unordered list of appointments scheduled for this week
      * @throws SAXException If the DOM is malformed
      * @throws IOException If input could not be loaded
      * @throws ParserConfigurationException If the parsing failed
      * @throws IllegalAccessException If the passed arguments don't match
      */
-	public static ArrayList<Appointment> ImportWeek(LocalDate localDate, BaseURL baseURL, String args) throws IOException, ParserConfigurationException, IllegalAccessException {
+	public static ArrayList<Appointment> ImportWeek(LocalDate localDate, String connectionURL) throws IOException, ParserConfigurationException, IllegalAccessException {
 		localDate = DateUtilities.Normalize(localDate);
-		
 		ArrayList<Appointment> weekAppointments = new ArrayList<>();
 		StringBuilder pageContentBuilder = new StringBuilder();
-		StringBuilder connectionURL = new StringBuilder(baseURL.complete()).append("?");
 		String line, pageContent;
-
-		// TODO The parameters here are the same each week. define them and just pass connectionURL to ImportWeek
-		HashMap<String, String> params = new HashMap<String, String>();
-		String[] paramsStrings = args.split("&");
-		for (String paramsString : paramsStrings) {
-			String[] kvStrings = paramsString.split("=");
-			IntStream.range(0, kvStrings.length).forEach(j -> params.put(kvStrings[0], kvStrings[1]));
-		}
-
-		// Establish connection to date
-        // key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo&today=Heute
-		if (params.containsKey("key")) {
-            connectionURL.append("key=").append(params.get("key"));
-        // page=calendar&user=vollmer&file=tinf15b3&today=Heute
-        } else if (params.containsKey("page") && params.get("page").equalsIgnoreCase("calendar") && params.containsKey("user") && params.containsKey("file")) {
-            connectionURL.append("page=calendar&user=").append(params.get("user")).append("&file=").append(params.get("file"));
-        } else {
-            throw new IllegalAccessException();
-        }
-
-        connectionURL.append("&day=").append(localDate.getDayOfMonth()).append("&month=").append(localDate.getMonthValue()).append("&year=").append(localDate.getYear());
-
-        URLConnection webConnection = new URL(connectionURL.toString()).openConnection();
+        URLConnection webConnection = new URL(connectionURL).openConnection();
 		BufferedReader br = new BufferedReader(new InputStreamReader(webConnection.getInputStream(), StandardCharsets.UTF_8));
 
 		// Read the whole page
@@ -139,7 +135,7 @@ public final class DataImporter {
 		pageContent = ("<?xml version=\"1.0\"?>\n" + pageContent.substring(pageContent.indexOf("<tbody>"), pageContent.lastIndexOf("</tbody>") + 8))
 				.replaceAll("&nbsp;", "&#160;")
 				.replaceAll("<br>", "<br/>")
-				.replaceAll("<a href=\".*(<|>).*\">.*</a>", "");
+				.replaceAll("<a href=\".*[<>].*\">.*</a>", "");
 
 		// Parse the document
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();

@@ -13,7 +13,7 @@ import static dhbw.timetable.rablabla.data.DataImporter.ImportWeekRange;
 
 public class Main {
 
-    private static final boolean debugData = false;
+    private static final boolean debugData = true;
 
     private final static String[] test_urls = {
             "http://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo",
