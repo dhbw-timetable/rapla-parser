@@ -136,7 +136,10 @@ public final class DataImporter {
 		pageContent = pageContentBuilder.toString();
 
 		// Trim and filter to correct tbody inner HTML
-		pageContent = ("<?xml version=\"1.0\"?>\n" + pageContent.substring(pageContent.indexOf("<tbody>"), pageContent.lastIndexOf("</tbody>") + 8)).replaceAll("&nbsp;", "&#160;").replaceAll("<br>", "<br/>");
+		pageContent = ("<?xml version=\"1.0\"?>\n" + pageContent.substring(pageContent.indexOf("<tbody>"), pageContent.lastIndexOf("</tbody>") + 8))
+				.replaceAll("&nbsp;", "&#160;")
+				.replaceAll("<br>", "<br/>")
+				.replaceAll("<a href=\".*(<|>).*\">.*</a>", "");
 
 		// Parse the document
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();

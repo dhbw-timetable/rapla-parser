@@ -13,6 +13,8 @@ import static dhbw.timetable.rablabla.data.DataImporter.ImportWeekRange;
 
 public class Main {
 
+    private static final boolean debugData = false;
+
     private final static String[] test_urls = {
             "http://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo",
             "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo&day=9&month=12&year=2016&today=Heute&test=crap",
@@ -21,7 +23,7 @@ public class Main {
             "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhAWXw8wYxzdc8a_Gx7NBrcf&day=9&month=12&year=2016&today=Heute&test=crap",
 
             "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCdjALVplAQk2X4GqU-cLG6",
-            "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCdjALVplAQk2X4GqU-cLG6&day=9&month=12&year=2016&today=Heute&test=crap",
+            "http://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCdjALVplAQk2X4GqU-cLG6&day=9&month=12&year=2016&today=Heute&test=crap",
 
             "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCRWwKk8VgrnjjdW94d4cBX",
             "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCRWwKk8VgrnjjdW94d4cBX&day=9&month=12&year=2016&today=Heute&test=crap",
@@ -46,19 +48,27 @@ public class Main {
     private static void unit_test(LocalDate start, LocalDate end) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         System.out.println("Starting test from " + start.format(dtf) + " to " + end.format(dtf) +  "...");
-
+        boolean error = false;
         for(String url : test_urls) {
             System.out.print("Checking " + url + " ... ");
             try {
                 Map<LocalDate, ArrayList<Appointment>> data = DataImporter.ImportWeekRange(start, end, url);
+                if (debugData) {
+                    System.out.println();
+                    print(data);
+                }
                 System.out.println("SUCCESS!");
             } catch (NoConnectionException | MalformedURLException | IllegalAccessException e) {
+                error = true;
                 System.out.println("FAIL!");
                 e.printStackTrace();
             }
         }
-
-        System.out.println("Test successfully finished! :)");
+        if (error) {
+            System.out.println("Test finished with errors :(");
+        } else {
+            System.out.println("Test successfully finished! :)");
+        }
     }
 
     private static void print(Map<LocalDate, ArrayList<Appointment>> data) {
