@@ -1,4 +1,4 @@
-package dhbw.timetable.rablabla.data.excpetions;
+package dhbw.timetable.rablabla.data.exceptions;
 
 public class NoConnectionException extends Exception {
     String url;

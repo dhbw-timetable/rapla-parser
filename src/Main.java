@@ -1,7 +1,6 @@
 import dhbw.timetable.rablabla.data.Appointment;
 import dhbw.timetable.rablabla.data.DataImporter;
-import dhbw.timetable.rablabla.data.DateUtilities;
-import dhbw.timetable.rablabla.data.excpetions.NoConnectionException;
+import dhbw.timetable.rablabla.data.exceptions.NoConnectionException;
 
 import java.net.MalformedURLException;
 import java.time.LocalDate;
