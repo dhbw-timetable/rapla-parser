@@ -64,12 +64,16 @@ public final class DataImporter {
      * @throws IllegalAccessException If the passed arguments don't match
      */
     public static Map<LocalDate, ArrayList<Appointment>> ImportWeekRange(LocalDate startDate, LocalDate endDate, BaseURL baseURL, String args) throws MalformedURLException, NoConnectionException, IllegalAccessException {
+        // Ensure connection. Throw errors if invalid connection
         checkConnection(baseURL.complete() + args);
 
 	    Map<LocalDate, ArrayList<Appointment>> appointments = new LinkedHashMap<>();
-		startDate = DateUtilities.Normalize(startDate);
+
+	    // To monday
+	    startDate = DateUtilities.Normalize(startDate);
 		endDate = DateUtilities.Normalize(endDate);
 
+		// Extract the parameters
         final StringBuilder connectionURLBuilder = new StringBuilder(baseURL.complete()).append("?");
         HashMap<String, String> params = new HashMap<String, String>();
         String[] paramsStrings = args.split("&");
@@ -78,7 +82,7 @@ public final class DataImporter {
             IntStream.range(0, kvStrings.length).forEach(j -> params.put(kvStrings[0], kvStrings[1]));
         }
 
-        // Establish connection to date
+        // Appending only necessary parameters
         // key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo&today=Heute
         if (params.containsKey("key")) {
             connectionURLBuilder.append("key=").append(params.get("key"));
@@ -89,17 +93,20 @@ public final class DataImporter {
             throw new IllegalAccessException();
         }
 
-        final String connectionURL = connectionURLBuilder.toString();
-
+        // Request every week and put them into the map
 		do {
             try {
-                appointments.put(startDate, ImportWeek(startDate, connectionURL + "&day=" + startDate.getDayOfMonth() + "&month=" + startDate.getMonthValue() + "&year=" + startDate.getYear()));
+                appointments.put(startDate, ImportWeek(startDate, connectionURLBuilder.toString()
+                        + "&day=" + startDate.getDayOfMonth()
+                        + "&month=" + startDate.getMonthValue()
+                        + "&year=" + startDate.getYear()));
             } catch (IOException | ParserConfigurationException e) {
             	System.out.println("FAIL!" + System.lineSeparator() + "Error date: " + startDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
                 e.printStackTrace();
             } catch (IllegalAccessException e ) {
                 throw e;
             }
+            // Next week
             startDate = startDate.plusDays(7);
 		} while (!startDate.isAfter(endDate));
 
@@ -117,12 +124,12 @@ public final class DataImporter {
      * @throws IllegalAccessException If the passed arguments don't match
      */
 	public static ArrayList<Appointment> ImportWeek(LocalDate localDate, String connectionURL) throws IOException, ParserConfigurationException, IllegalAccessException {
-		localDate = DateUtilities.Normalize(localDate);
-		ArrayList<Appointment> weekAppointments = new ArrayList<>();
+        String line, pageContent;
+	    ArrayList<Appointment> weekAppointments = new ArrayList<>();
 		StringBuilder pageContentBuilder = new StringBuilder();
-		String line, pageContent;
         URLConnection webConnection = new URL(connectionURL).openConnection();
 		BufferedReader br = new BufferedReader(new InputStreamReader(webConnection.getInputStream(), StandardCharsets.UTF_8));
+        localDate = DateUtilities.Normalize(localDate);
 
 		// Read the whole page
 		while ((line = br.readLine()) != null) {
@@ -149,8 +156,9 @@ public final class DataImporter {
             Node tableRow;
             for (int temp = 0; temp < nList.getLength(); temp++) {
                 tableRow = nList.item(temp);
-                if (tableRow.getNodeType() == Node.ELEMENT_NODE)
+                if (tableRow.getNodeType() == Node.ELEMENT_NODE) {
                     importTableRow(weekAppointments, tableRow, DateUtilities.Clone(localDate));
+                }
             }
 
         } catch (SAXException e) {
@@ -189,7 +197,7 @@ public final class DataImporter {
 		NodeList cells = tableRow.getChildNodes();
 		for (int i = 0; i < cells.getLength(); i++) {
 			Node cell = cells.item(i);
-			// Filter <th> and other crap
+			// Filter <th> and other crap, extract class=week_block
 			if (cell.getNodeType() == Node.ELEMENT_NODE && cell.getNodeName().equals("td")) {
 				Element element = (Element) cell;
 				String type = element.getAttribute("class");
@@ -203,75 +211,73 @@ public final class DataImporter {
 	}
 
     /**
-     * Parses a node into an appointment for the given date.
+     * Parses a node into an appointment for the given date. The information is based on anchor and tooltip data.
      * @param block The appointments week_block node
      * @param date The given date
      * @return Imported appointment
      */
 	private static Appointment importAppointment(Node block, LocalDate date) {
-		Node aNode = block.getFirstChild();
-		NodeList aChildren = aNode.getChildNodes();
+        Element labelElement, dataElement;
+        // All children from the event
+        NodeList aChildren = block.getFirstChild().getChildNodes(), dataItems;
+        // Rows from table body
+        NodeList rows = aChildren.item(aChildren.getLength() - 1).getLastChild().getChildNodes();
+        // If no time is provided, appointment is whole working day
+        String timeData, time, className;
+        StringBuilder courseBuilder = new StringBuilder(), infoBuilder = new StringBuilder(), tempBuilder = null;
 
-		int correctShift = 0;
-		// If no time is provided, appointment is whole working day
-		String timeData, time;
-		if (aChildren.item(0).getNodeType() == Node.ELEMENT_NODE) {
-			time = "08:00-18:00";
-			correctShift = -1;
-		} else {
-			timeData = ((CharacterData) aChildren.item(0)).getData();
-			// Filter &#160; alias &nbsp;
-			time = timeData.substring(0, 5).concat(timeData.substring(6));
-		}
+        // If no time is provided, event is whole working day
+        if (aChildren.item(0).getNodeType() == Node.ELEMENT_NODE) {
+            time = "08:00-18:00";
+        } else {
+            timeData = ((CharacterData) aChildren.item(0)).getData();
+            // Filter &#160; alias &nbsp;
+            time = timeData.substring(0, 5).concat(timeData.substring(6));
+        }
 
-		// If no course is provided it may be holiday or special event
-		String course, info;
-		if (aChildren.item(2 + correctShift).getNodeType() == Node.ELEMENT_NODE) {
-			course = "No course specified";
-			info = importInfoFromSpan(aChildren.item(2 + correctShift).getChildNodes().item(4).getChildNodes());
-		} else {
-			course = ((CharacterData) aChildren.item(2 + correctShift)).getData();
-			info = importInfoFromSpan(aChildren.item(3 + correctShift).getChildNodes().item(4).getChildNodes());
-		}
-		
-		LocalDateTime[] times = DateUtilities.ConvertToTime(date, time);
-		
-		return new Appointment(times[0], times[1], course, info);
-	}
+        // Handle each row of the table
+        for (int i = 0; i < rows.getLength(); i++) {
+            Node row = rows.item(i);
+            if(row.getNodeType() == Node.ELEMENT_NODE) {
+                dataItems = row.getChildNodes();
+                labelElement = (Element) dataItems.item(1);
 
-	private static String importInfoFromSpan(NodeList spanTableRows) {
-		String tutor = "";
-		String resource = "";
-		for (int i = 0; i < spanTableRows.getLength(); i++) {
-			Node row = spanTableRows.item(i);
-			if (row.getNodeType() == Node.ELEMENT_NODE) {
-				NodeList cells = row.getChildNodes();
-				for (int x = 0; x < cells.getLength(); x++) {
-					Node cell = cells.item(x);
-					if (cell.getNodeType() == Node.ELEMENT_NODE) {
-						Element element = (Element) cell;
-						String type = element.getAttribute("class");
-						if (type.contains("label")) {
-							if (element.getTextContent().equalsIgnoreCase("Ressourcen:")) {
-								resource = "Ressourcen: " + cell.getNextSibling().getNextSibling().getTextContent().trim().split(" ")[0];
-							} else if (element.getTextContent().equalsIgnoreCase("Personen:")) {
-								tutor = "Personen: " + cell.getNextSibling().getNextSibling().getTextContent();
-							}
-							// Ignore Bemerkung, zuletzt geändert, Veranstaltungsname
-						} else if (type.contains("value")) {
-							// ignore
-						} else {
-							// TODO Remove warnings after intense (release) testing
-							System.out.println("Unidentified classname of row found in span table: " + type);
-							System.out.println("row nodeName " + row.getNodeName());
-							System.out.println("cell nodeName " + cell.getNodeName());
-							System.out.println("element nodeName " + element.getNodeName());
-						}
-					}
-				}
-			}
-		}
-		return (resource + " " + tutor).trim();
-	}
+                // Get category: info or title
+                switch (labelElement.getTextContent()) {
+                    case "Titel:":
+                    case "Veranstaltungsname:":
+                        tempBuilder = courseBuilder;
+                        break;
+                    case "Bemerkung:":
+                    case "Ressourcen:":
+                    case "Personen:":
+                        tempBuilder = infoBuilder;
+                        break;
+                    default:
+                        tempBuilder = null;
+                        // System.out.println("WARN: Unknown labelElement text content: " + labelElement.getTextContent());
+                        break;
+                }
 
+                if (tempBuilder != null) {
+                    // Skip label and text
+                    for (int j = 3; j < dataItems.getLength(); j++) {
+                        Node dataNode = dataItems.item(j);
+                        if (dataNode.getNodeType() == Node.ELEMENT_NODE) {
+                            dataElement = (Element) dataItems.item(j);
+                            className = dataElement.getAttribute("class");
+                            if (className.equals("value")) {
+                                tempBuilder.append(dataElement.getTextContent()).append(" ");
+                            } else {
+                                System.out.println("WARN: Unknown className in data table: " + className);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        LocalDateTime[] times = DateUtilities.ConvertToTime(date, time);
+        return new Appointment(times[0], times[1], courseBuilder.toString().trim(), infoBuilder.toString().trim());
+    }
 }
