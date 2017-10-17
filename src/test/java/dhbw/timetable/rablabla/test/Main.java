@@ -1,3 +1,5 @@
+package dhbw.timetable.rablabla.test;
+
 import dhbw.timetable.rablabla.data.Appointment;
 import dhbw.timetable.rablabla.data.DataImporter;
 import dhbw.timetable.rablabla.data.exceptions.NoConnectionException;
@@ -7,8 +9,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Map;
-
-import static dhbw.timetable.rablabla.data.DataImporter.ImportWeekRange;
 
 public class Main {
 
@@ -64,9 +64,9 @@ public class Main {
             }
         }
         if (error) {
-            System.out.println("Test finished with errors :(");
+            System.out.println("Main finished with errors :(");
         } else {
-            System.out.println("Test successfully finished! :)");
+            System.out.println("Main successfully finished! :)");
         }
     }
 

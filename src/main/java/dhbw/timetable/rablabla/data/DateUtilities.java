@@ -42,8 +42,8 @@ public final class DateUtilities {
 	 * Converts java.time.LocalDateTime objects to java.util.Date objects 
 	 * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
 	 * 
-	 * @param java.time.LocalDateTime src
-	 * @return java.util.Date new instance
+	 * @param src the date to convert
+	 * @return new instance
 	 */
 	public static Date ConvertToDate(LocalDateTime src) {
 		Calendar tempCal = Calendar.getInstance(Locale.GERMANY);

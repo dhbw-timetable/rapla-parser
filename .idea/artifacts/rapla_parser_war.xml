@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="rapla-parser:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="Rablabla.war">
+      <element id="artifact" artifact-name="rapla-parser:war exploded" />
+    </root>
+  </artifact>
+</component>
