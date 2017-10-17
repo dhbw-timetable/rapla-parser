@@ -40,7 +40,7 @@ public final class DataImporter {
      * @param startDate A day of the week to start (include)
      * @param endDate A day of the week to end (include)
      * @param url The complete url with the protocol and all arguments
-     * @return Map<LocalDate, ArrayList<Appointment>> events ordered through weeks
+     * @return Map of (LocalDate, ArrayList of (Appointment)) events ordered through weeks
      * @throws MalformedURLException If the passed url does not match pattern
      * @throws NoConnectionException If the server could not be reached
      * @throws IllegalAccessException If the passed arguments don't match
@@ -57,8 +57,8 @@ public final class DataImporter {
      * @param startDate A day of the week to start (include)
      * @param endDate A day of the week to end (include)
      * @param baseURL The host enum dhbw.timetable.rablabla.data.BaseURL
-     * @param args Arguments such as key | (user & page & file)
-     * @return Map<LocalDate, ArrayList<Appointment>> events ordered through weeks
+     * @param args Arguments such as key or (user page file)
+     * @return Map of (LocalDate, ArrayList(Appointment)) events ordered through weeks
      * @throws MalformedURLException If the passed url does not match pattern
      * @throws NoConnectionException If the server could not be reached
      * @throws IllegalAccessException If the passed arguments don't match
@@ -118,7 +118,6 @@ public final class DataImporter {
      * @param localDate A day of the week to import
      * @param connectionURL The host enum dhbw.timetable.rablabla.data.BaseURL
      * @return Unordered list of appointments scheduled for this week
-     * @throws SAXException If the DOM is malformed
      * @throws IOException If input could not be loaded
      * @throws ParserConfigurationException If the parsing failed
      * @throws IllegalAccessException If the passed arguments don't match
