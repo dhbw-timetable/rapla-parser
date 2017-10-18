@@ -103,8 +103,6 @@ public final class DataImporter {
             } catch (IOException | ParserConfigurationException e) {
             	System.out.println("FAIL!" + System.lineSeparator() + "Error date: " + startDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
                 e.printStackTrace();
-            } catch (IllegalAccessException e ) {
-                throw e;
             }
             // Next week
             startDate = startDate.plusDays(7);
