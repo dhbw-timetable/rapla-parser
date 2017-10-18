@@ -27,9 +27,8 @@ public final class DateUtilities {
 	 	return src.minusDays(src.getDayOfWeek().getValue() - DayOfWeek.MONDAY.getValue());
 	}
 
-	public static void NextWeek(LocalDate d) {
-		d = d.plusDays(7);
-		Normalize(d);
+	public static LocalDate NextWeek(LocalDate d) {
+		return Normalize(d.plusDays(7));
 	}
 
 	public static String GetCurrentDate() {
