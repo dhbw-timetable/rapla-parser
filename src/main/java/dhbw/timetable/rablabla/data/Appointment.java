@@ -10,6 +10,7 @@ import java.util.Locale;
  * Created by Hendrik Ulbrich (C) 2017
  */
 public final class Appointment {
+
 	private LocalDateTime startDate, endDate;
 	private String course, info;
 
@@ -71,4 +72,5 @@ public final class Appointment {
 	public int hashCode() {
 		return this.toString().hashCode();
 	}
+
 }

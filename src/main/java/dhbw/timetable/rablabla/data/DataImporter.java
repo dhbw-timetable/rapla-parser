@@ -277,4 +277,5 @@ public final class DataImporter {
         LocalDateTime[] times = DateUtilities.ConvertToTime(date, time);
         return new Appointment(times[0], times[1], courseBuilder.toString().trim(), infoBuilder.toString().trim());
     }
+
 }

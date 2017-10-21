@@ -1,6 +1,10 @@
 package dhbw.timetable.rablabla.data;
 
+/**
+ * Created by Hendrik Ulbrich (C) 2017
+ */
 public enum BaseURL {
+
     STUTTGART("stuttgart"), KARLSRUHE("karlsruhe"), MANNHEIM("mannheim");
 
     private final String text;
@@ -33,4 +37,5 @@ public enum BaseURL {
     public String toString() {
         return text;
     }
+
 }
