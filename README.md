@@ -4,7 +4,7 @@ This is a library for crawling timetable events from the rapla website of DHBWs.
 ## Import
 Gradle (Maven Import):
 ```
-compile 'com.github.dhbw-timetable:rapla-parser:0.2'
+compile 'com.github.dhbw-timetable:rapla-parser:0.2.1'
 ```
 
 Maven:
@@ -12,7 +12,7 @@ Maven:
 <dependency>
    <groupId>com.github.dhbw-timetable</groupId>
    <artifactId>rapla-parser</artifactId>
-   <version>0.2</version>
+   <version>0.2.1</version>
 </dependency>
 ```
 

@@ -3,9 +3,7 @@ package dhbw.timetable.rablabla.data;
 import javafx.util.Pair;
 
 import java.text.SimpleDateFormat;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.WeekFields;
 import java.util.*;
@@ -25,10 +23,15 @@ public final class DateUtilities {
      *
      * @param first The first date
      * @param second The second date
-     * @return true if first > second. Else false.
+     * @return true if first is after second. Else false.
      */
     public static boolean IsDateOver(LocalDate first, LocalDate second) {
         return first.isAfter(second);
+    }
+
+    @Deprecated
+    public static boolean IsDateOver(GregorianCalendar first, GregorianCalendar second) {
+        return IsDateOver(ConvertToLocalDate(first), ConvertToLocalDate(second));
     }
 
     /**
@@ -38,9 +41,14 @@ public final class DateUtilities {
      * @param src Date to normalize
      * @return Copy of the normalized date
      */
-	public static LocalDate Normalize(LocalDate src) {
-	 	return src.minusDays(src.getDayOfWeek().getValue() - DayOfWeek.MONDAY.getValue());
-	}
+    public static LocalDate Normalize(LocalDate src) {
+        return src.minusDays(src.getDayOfWeek().getValue() - DayOfWeek.MONDAY.getValue());
+    }
+
+    @Deprecated
+    public static LocalDate Normalize(GregorianCalendar cal) {
+        return Normalize(ConvertToLocalDate(cal));
+    }
 
     /**
      * Changes the day attribute to the next monday.
@@ -52,6 +60,11 @@ public final class DateUtilities {
 	public static LocalDate NextWeek(LocalDate date) {
 		return Normalize(date.plusDays(7));
 	}
+
+	@Deprecated
+    public static LocalDate NextWeek(GregorianCalendar date) {
+        return NextWeek(ConvertToLocalDate(date));
+    }
 
     /**
      * Produces a string which represents the date of today.
@@ -74,6 +87,11 @@ public final class DateUtilities {
 		return WeekFields.of(Locale.GERMANY) == WeekFields.of(Locale.GERMANY)
 				&& d1.getYear() == d2.getYear();
 	}
+
+    @Deprecated
+    public static boolean IsSameWeek(GregorianCalendar d1, GregorianCalendar d2) {
+        return IsSameWeek(ConvertToLocalDate(d1), ConvertToLocalDate(d2));
+    }
 
     /**
      * Clones the day, month and year parameter.
@@ -117,15 +135,70 @@ public final class DateUtilities {
 	 * Converts java.time.LocalDateTime objects to java.util.Date objects 
 	 * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
 	 * 
-	 * @param src the date to convert
+	 * @param date the date to convert
 	 * @return new instance of type Date
 	 */
-	public static Date ConvertToDate(LocalDateTime src) {
-		Calendar tempCal = Calendar.getInstance(Locale.GERMANY);
-		tempCal.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
-		tempCal.set(src.getYear(), src.getMonthValue() - 1, src.getDayOfMonth(), src.getHour(), src.getMinute(), 0);
-		return tempCal.getTime();
-	}
+	public static Date ConvertToDate(LocalDateTime date) {
+        return ConvertToCalendar(date).getTime();
+    }
+
+    /**
+     * Converts java.time.LocalDate objects to java.util.Date objects
+     * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
+     *
+     * @param date the date to convert
+     * @return new instance of type Date
+     */
+    public static Date ConvertToDate(LocalDate date) {
+        return ConvertToCalendar(date).getTime();
+    }
+
+    /**
+     * Converts java.time.LocalDateTime objects to calendar objects
+     * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
+     *
+     * @param date The date to convert
+     * @return an instance of GregorianCalendar
+     */
+    public static GregorianCalendar ConvertToCalendar(LocalDateTime date) {
+        GregorianCalendar tempCal = (GregorianCalendar) Calendar.getInstance(Locale.GERMANY);
+        tempCal.setTimeZone(TimeZone.getTimeZone("Europe/Berlin"));
+        tempCal.set(date.getYear(), date.getMonthValue() - 1, date.getDayOfMonth(), date.getHour(), date.getMinute(), 0);
+        return tempCal;
+    }
+
+    /**
+     * Converts java.time.LocalDate objects to calendar objects
+     * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
+     *
+     * @param date The date to convert
+     * @return an instance of GregorianCalendar
+     */
+    public static GregorianCalendar ConvertToCalendar(LocalDate date) {
+	    return ConvertToCalendar(LocalDateTime.of(date, LocalTime.MIN));
+    }
+
+    /**
+     * Converts calendar objects to java.time.LocalDateTime objects
+     * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
+     *
+     * @param date The date to convert
+     * @return an instance of LocalDate
+     */
+    public static LocalDate ConvertToLocalDate(GregorianCalendar date) {
+        return date.toInstant().atZone(ZoneId.of("Europe/Berlin")).toLocalDate();
+    }
+
+    /**
+     * Converts calendar objects to java.time.LocalDateTime objects
+     * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
+     *
+     * @param date The date to convert
+     * @return an instance of LocalDateTime
+     */
+    public static LocalDateTime ConvertToLocalDateTime(GregorianCalendar date) {
+        return date.toInstant().atZone(ZoneId.of("Europe/Berlin")).toLocalDateTime();
+    }
 
     /**
      * Gets latest and earliest times for a week of appointments to set the time borders
@@ -174,6 +247,11 @@ public final class DateUtilities {
         return null;
     }
 
+    @Deprecated
+    public static Appointment GetFirstAppointmentOfDay(ArrayList<Appointment> appointments, GregorianCalendar day) {
+        return GetFirstAppointmentOfDay(appointments, ConvertToLocalDate(day));
+    }
+
     /**
      * Filters a list of appointments by its week.
      *
@@ -191,6 +269,11 @@ public final class DateUtilities {
             }
         }
         return weekAppointments;
+    }
+
+    @Deprecated
+    public static ArrayList<Appointment> GetWeekAppointmentsOfWeek(GregorianCalendar week, ArrayList<Appointment> superList) {
+        return GetWeekAppointmentsOfWeek(ConvertToLocalDate(week), superList);
     }
 
     /**
@@ -213,6 +296,11 @@ public final class DateUtilities {
         return dayAppointments;
     }
 
+    @Deprecated
+    public static ArrayList<Appointment> GetAppointmentsOfDay(GregorianCalendar day, ArrayList<Appointment> list) {
+        return GetAppointmentsOfDay(ConvertToLocalDate(day), list);
+    }
+
     /**
      * Filters a list of appointments to match a day.
      *
@@ -229,6 +317,11 @@ public final class DateUtilities {
             }
         }
         return dayAppointments;
+    }
+
+    @Deprecated
+    public static LinkedHashSet<Appointment> GetAppointmentsOfDay(GregorianCalendar day, LinkedHashSet<Appointment> list) {
+        return GetAppointmentsOfDay(ConvertToLocalDate(day), list);
     }
 
 }

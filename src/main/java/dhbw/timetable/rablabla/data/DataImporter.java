@@ -35,6 +35,8 @@ import org.xml.sax.SAXException;
  */
 public final class DataImporter {
 
+    private DataImporter() {}
+
     /**
      * Imports all appointments from the given url which are in the parameters week range
      * @param startDate A day of the week to start (include)
@@ -50,6 +52,11 @@ public final class DataImporter {
         int urlSplit = url.indexOf(deSuffix);
         final String regularPrefix = url.substring(0, url.indexOf(cityPrefix));
 		return ImportWeekRange(startDate, endDate, BaseURL.valueOf(url.substring(regularPrefix.length() + cityPrefix.length(), urlSplit).toUpperCase()), url.substring(urlSplit + deSuffix.length()));
+    }
+
+    @Deprecated
+    public static Map<LocalDate, ArrayList<Appointment>> ImportWeekRange(GregorianCalendar startDate, GregorianCalendar endDate, String url) throws MalformedURLException, NoConnectionException, IllegalAccessException {
+        return ImportWeekRange(DateUtilities.ConvertToLocalDate(startDate), DateUtilities.ConvertToLocalDate(endDate), url);
     }
 
     /**
@@ -111,6 +118,11 @@ public final class DataImporter {
 		return appointments;
 	}
 
+    @Deprecated
+    public static Map<LocalDate, ArrayList<Appointment>> ImportWeekRange(GregorianCalendar startDate, GregorianCalendar endDate, BaseURL baseURL, String args) throws MalformedURLException, NoConnectionException, IllegalAccessException {
+        return ImportWeekRange(DateUtilities.ConvertToLocalDate(startDate), DateUtilities.ConvertToLocalDate(endDate), baseURL, args);
+    }
+
     /**
      * Imports all events of the week
      * @param localDate A day of the week to import
@@ -166,8 +178,6 @@ public final class DataImporter {
 
 		return weekAppointments;
 	}
-
-    private DataImporter() {}
 
     /**
      * Checks if the URL pattern matches a regular expression and pings the server
