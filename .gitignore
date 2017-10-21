@@ -1,2 +1,4 @@
 target/
 out/
+.idea/
+rapla-parser.iml
