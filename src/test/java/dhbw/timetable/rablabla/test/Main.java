@@ -2,6 +2,7 @@ package dhbw.timetable.rablabla.test;
 
 import dhbw.timetable.rablabla.data.Appointment;
 import dhbw.timetable.rablabla.data.DataImporter;
+import dhbw.timetable.rablabla.data.DateUtilities;
 import dhbw.timetable.rablabla.data.exceptions.NoConnectionException;
 
 import java.net.MalformedURLException;

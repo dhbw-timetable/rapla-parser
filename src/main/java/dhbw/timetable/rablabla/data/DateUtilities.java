@@ -1,11 +1,8 @@
 package dhbw.timetable.rablabla.data;
 
-import javafx.util.Pair;
-
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.WeekFields;
 import java.util.*;
 
 /**
@@ -13,25 +10,17 @@ import java.util.*;
  */
 public final class DateUtilities {
 
-    public static final SimpleDateFormat GERMAN_STD_FORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
-    public static final DateTimeFormatter GERMAN_STD_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.GERMANY);
+    public static final SimpleDateFormat GERMAN_STD_SDATEFORMAT = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
+    public static final SimpleDateFormat GERMAN_STD_STIMEFORMAT = new SimpleDateFormat("HH:mm", Locale.GERMANY);
 
     private DateUtilities() {}
 
-    /**
-     * Says if the first date is after the second date.
-     *
-     * @param first The first date
-     * @param second The second date
-     * @return true if first is after second. Else false.
-     */
-    public static boolean IsDateOver(LocalDate first, LocalDate second) {
-        return first.isAfter(second);
+    public static DateTimeFormatter GERMAN_STD_DATEFORMATTER() {
+        return DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMANY);
     }
 
-    @Deprecated
-    public static boolean IsDateOver(GregorianCalendar first, GregorianCalendar second) {
-        return IsDateOver(ConvertToLocalDate(first), ConvertToLocalDate(second));
+    public static DateTimeFormatter GERMAN_STD_TIMEFORMATTER() {
+        return DateTimeFormatter.ofPattern("HH:mm", Locale.GERMANY);
     }
 
     /**
@@ -43,54 +32,6 @@ public final class DateUtilities {
      */
     public static LocalDate Normalize(LocalDate src) {
         return src.minusDays(src.getDayOfWeek().getValue() - DayOfWeek.MONDAY.getValue());
-    }
-
-    @Deprecated
-    public static LocalDate Normalize(GregorianCalendar cal) {
-        return Normalize(ConvertToLocalDate(cal));
-    }
-
-    /**
-     * Changes the day attribute to the next monday.
-     * If the current day is already monday, the day will change to monday next week.
-     *
-     * @param date The date to get the next week from
-     * @return Copy of the next week
-     */
-	public static LocalDate NextWeek(LocalDate date) {
-		return Normalize(date.plusDays(7));
-	}
-
-	@Deprecated
-    public static LocalDate NextWeek(GregorianCalendar date) {
-        return NextWeek(ConvertToLocalDate(date));
-    }
-
-    /**
-     * Produces a string which represents the date of today.
-     *
-     * @return String in GERMAN_STD_FORMAT
-     */
-	public static String GetCurrentDate() {
-		return GERMAN_STD_FORMAT.format(Calendar.getInstance().getTime());
-	}
-
-    /**
-     * Checks if two dates are in the same week
-     *
-     * @param d1 First
-     * @param d2 Second
-     * @return True if they are in the same week, false if not
-     */
-	public static boolean IsSameWeek(LocalDate d1, LocalDate d2) {
-		WeekFields weekFields = WeekFields.of(Locale.GERMANY);
-		return WeekFields.of(Locale.GERMANY) == WeekFields.of(Locale.GERMANY)
-				&& d1.getYear() == d2.getYear();
-	}
-
-    @Deprecated
-    public static boolean IsSameWeek(GregorianCalendar d1, GregorianCalendar d2) {
-        return IsSameWeek(ConvertToLocalDate(d1), ConvertToLocalDate(d2));
     }
 
     /**
@@ -132,9 +73,9 @@ public final class DateUtilities {
 	}
 
 	/**
-	 * Converts java.time.LocalDateTime objects to java.util.Date objects 
+	 * Converts java.time.LocalDateTime objects to java.util.Date objects
 	 * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
-	 * 
+	 *
 	 * @param date the date to convert
 	 * @return new instance of type Date
 	 */
@@ -200,128 +141,150 @@ public final class DateUtilities {
         return date.toInstant().atZone(ZoneId.of("Europe/Berlin")).toLocalDateTime();
     }
 
-    /**
-     * Gets latest and earliest times for a week of appointments to set the time borders
-     *
-     * FIXME Borders are not properly set on a FREE week
-     *
-     * @param weekAppointments All appointments of this week
-     * @return A pair of Integers. First is min, second is max border.
-     */
-    public static Pair<Integer, Integer> GetBorders(ArrayList<Appointment> weekAppointments) {
-        int startOnMin, endOnMin, max = 0, min = 1440;
+    // = = = = = = = = = = = = = = = = = = = =
 
-        for (Appointment a : weekAppointments) {
-            startOnMin = a.getStartDate().getHour() * 60
-                    + a.getStartDate().getMinute();
+    public final static class Backport {
 
-            endOnMin = a.getEndDate().getHour() * 60
-                    + a.getEndDate().getMinute();
+        private Backport() {}
 
-            if(startOnMin < min) {
-                min = startOnMin;
-            }
-
-            if(endOnMin > max) {
-                max = endOnMin;
+        public static boolean IsDateOver(GregorianCalendar date, GregorianCalendar isOver) {
+            if(date.get(Calendar.YEAR) == isOver.get(Calendar.YEAR)) {
+                if(date.get(Calendar.MONTH) == isOver.get(Calendar.MONTH)) {
+                    if(date.get(Calendar.DAY_OF_MONTH) == isOver.get(Calendar.DAY_OF_MONTH)) {
+                        return false;
+                    } else {
+                        return date.get(Calendar.DAY_OF_MONTH) > isOver.get(Calendar.DAY_OF_MONTH);
+                    }
+                } else {
+                    return date.get(Calendar.MONTH) > isOver.get(Calendar.MONTH);
+                }
+            } else {
+                return date.get(Calendar.YEAR) > isOver.get(Calendar.YEAR);
             }
         }
-        return new Pair<>(min, max);
-    }
 
-    /**
-     * Searches the first appointment of a day from within a list of appointments.
-     *
-     * @param appointments A list of events
-     * @param day The day to search the first appointment from
-     * @return The appointment if day found, null else
-     */
-    public static Appointment GetFirstAppointmentOfDay(ArrayList<Appointment> appointments, LocalDate day) {
-        for(Appointment a : appointments) {
-            // If same day
-            if(a.getDate().equals(day.format(GERMAN_STD_FORMATTER))) {
-                // Since appointments are partially sorted -> first element is a match
-                return a;
+        public static void NextWeek(GregorianCalendar g) {
+            AddDays(g, 7);
+            Normalize(g);
+        }
+
+        public static String GetCurrentDate() {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
+            Calendar c = Calendar.getInstance();
+            return sdf.format(c.getTime());
+        }
+
+        public static boolean IsSameWeek(GregorianCalendar g1, GregorianCalendar g2) {
+            return g1.get(Calendar.WEEK_OF_YEAR) == g2.get(Calendar.WEEK_OF_YEAR)
+                    && g1.get(Calendar.YEAR) == g2.get(Calendar.YEAR);
+        }
+
+        /**
+         * Normalizes the day to a week starting with monday
+         *
+         * @param g GregorianCalendar
+         */
+        @Deprecated
+        public static void Normalize_Native(GregorianCalendar g) {
+            g.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+        }
+
+        /**
+         * Sets the week day to last monday before. If it already is monday it does nothing.
+         *
+         * @param g GregorianCalendar
+         */
+        public static void Normalize(GregorianCalendar g) {
+            while(!new SimpleDateFormat("EEEE", Locale.GERMANY).format(g.getTime()).equals("Montag")){
+                Backport.SubtractDays(g, 1);
             }
         }
-        return null;
-    }
 
-    @Deprecated
-    public static Appointment GetFirstAppointmentOfDay(ArrayList<Appointment> appointments, GregorianCalendar day) {
-        return GetFirstAppointmentOfDay(appointments, ConvertToLocalDate(day));
-    }
+        public static void AddDays(GregorianCalendar g, int i) {
+            g.add(Calendar.DAY_OF_MONTH, i);
+        }
 
-    /**
-     * Filters a list of appointments by its week.
-     *
-     * @param week The week to match
-     * @param superList The list to filter
-     * @return The items that matched, an empty list if nothing matched
-     */
-    public static ArrayList<Appointment> GetWeekAppointmentsOfWeek(LocalDate week, ArrayList<Appointment> superList) {
-        ArrayList<Appointment> weekAppointments = new ArrayList<>();
-        if (superList != null) {
-            for (Appointment a : superList) {
-                if (IsSameWeek(a.getStartDate().toLocalDate(), week)) {
-                    weekAppointments.add(a);
+        public static void SubtractDays(GregorianCalendar g, int i) {
+            g.add(Calendar.DAY_OF_YEAR, -i);
+        }
+
+        public static BackportAppointment GetFirstAppointmentOfDay(ArrayList<BackportAppointment> appointments, GregorianCalendar day) {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
+            for(BackportAppointment a : appointments) {
+                // If same day
+                if(sdf.format(a.getStartDate().getTime()).equals(sdf.format(day.getTime()))) {
+                    // Since appointments are partially sorted -> first element is a match
+                    return a;
                 }
             }
+            return null;
         }
-        return weekAppointments;
-    }
 
-    @Deprecated
-    public static ArrayList<Appointment> GetWeekAppointmentsOfWeek(GregorianCalendar week, ArrayList<Appointment> superList) {
-        return GetWeekAppointmentsOfWeek(ConvertToLocalDate(week), superList);
-    }
+        public static BackportAppointment GetLastAppointmentOfDay(ArrayList<BackportAppointment> appointments, GregorianCalendar day) {
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
+            BackportAppointment result = null;
+            for(BackportAppointment a : appointments) {
+                // If same day
+                if(sdf.format(a.getStartDate().getTime()).equals(sdf.format(day.getTime()))) {
+                    // Since appointments are sorted -> first element is a match
+                    result = a;
+                }
+            }
+            return result;
+        }
 
-    /**
-     * Filters a list of appointments to match a day.
-     *
-     * @param day The day to match
-     * @param list The list to search in
-     * @return A list of appointments of the given day. The list will be empty
-     */
-    public static ArrayList<Appointment> GetAppointmentsOfDay(LocalDate day, ArrayList<Appointment> list) {
-        ArrayList<Appointment> dayAppointments = new ArrayList<>();
-        if (list != null) {
-            String currDate = day.format(GERMAN_STD_FORMATTER);
-            for (Appointment a : list) {
-                if (a.getDate().equals(currDate)) {
+        // FIXME Borders are not properly set on a FREE week
+        public static Integer[] GetBorders(ArrayList<BackportAppointment> weekAppointments) {
+            int startOnMin, endOnMin, max = 0, min = 1440;
+            for(BackportAppointment a : weekAppointments) {
+                startOnMin = a.getStartDate().get(Calendar.HOUR_OF_DAY) * 60
+                        + a.getStartDate().get(Calendar.MINUTE);
+                endOnMin = a.getEndDate().get(Calendar.HOUR_OF_DAY) * 60
+                        + a.getEndDate().get(Calendar.MINUTE);
+                if(startOnMin < min) {
+                    min = startOnMin;
+                }
+                if(endOnMin > max) {
+                    max = endOnMin;
+                }
+            }
+            return new Integer[] { min, max };
+        }
+
+        public static ArrayList<BackportAppointment> GetWeekAppointments(GregorianCalendar week, ArrayList<BackportAppointment> superList) {
+            ArrayList<BackportAppointment> weekAppointments = new ArrayList<>();
+            if (superList != null) {
+                for (BackportAppointment a : superList) {
+                    if (Backport.IsSameWeek(a.getStartDate(), week)) {
+                        weekAppointments.add(a);
+                    }
+                }
+            }
+            return weekAppointments;
+        }
+
+        public static ArrayList<BackportAppointment> GetAppointmentsOfDay(GregorianCalendar day, ArrayList<BackportAppointment> list) {
+            ArrayList<BackportAppointment> dayAppointments = new ArrayList<>();
+            if (list != null) {
+                String currDate = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY).format(day.getTime());
+                for (BackportAppointment a : list) {
+                    if (a.getDate().equals(currDate)) {
+                        dayAppointments.add(a);
+                    }
+                }
+            }
+            return dayAppointments;
+        }
+
+        public static LinkedHashSet<BackportAppointment> GetAppointmentsOfDayAsSet(GregorianCalendar day, LinkedHashSet<BackportAppointment> list) {
+            LinkedHashSet<BackportAppointment> dayAppointments = new LinkedHashSet<>();
+            String currDate = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY).format(day.getTime());
+            for(BackportAppointment a : list) {
+                if(a.getDate().equals(currDate)) {
                     dayAppointments.add(a);
                 }
             }
+            return dayAppointments;
         }
-        return dayAppointments;
     }
-
-    @Deprecated
-    public static ArrayList<Appointment> GetAppointmentsOfDay(GregorianCalendar day, ArrayList<Appointment> list) {
-        return GetAppointmentsOfDay(ConvertToLocalDate(day), list);
-    }
-
-    /**
-     * Filters a list of appointments to match a day.
-     *
-     * @param day The day to match
-     * @param list The list to search in
-     * @return A set of appointments of the given day. The list will be empty
-     */
-    public static LinkedHashSet<Appointment> GetAppointmentsOfDay(LocalDate day, LinkedHashSet<Appointment> list) {
-        LinkedHashSet<Appointment> dayAppointments = new LinkedHashSet<>();
-        String currDate = day.format(GERMAN_STD_FORMATTER);
-        for(Appointment a : list) {
-            if(a.getDate().equals(currDate)) {
-                dayAppointments.add(a);
-            }
-        }
-        return dayAppointments;
-    }
-
-    @Deprecated
-    public static LinkedHashSet<Appointment> GetAppointmentsOfDay(GregorianCalendar day, LinkedHashSet<Appointment> list) {
-        return GetAppointmentsOfDay(ConvertToLocalDate(day), list);
-    }
-
 }

@@ -12,7 +12,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.IntStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -30,10 +29,25 @@ import org.xml.sax.SAXException;
 /**
  * Created by Hendrik Ulbrich (C) 2017
  *
- * This is a parser for the rapla website. It is implemented as a singleton.
- * Use the public import methods to import events into appointment structure.
+ * This is a parser for the rapla website. It is implemented as a singleton with
+ * backport compatibility for the java.util.Date API. Use the public import methods
+ * to import events into appointment structure.
  */
 public final class DataImporter {
+
+    @Deprecated
+    public static final class Backport {
+        private Backport() {}
+
+        public static Map<GregorianCalendar, ArrayList<BackportAppointment>> ImportWeekRange(GregorianCalendar startDate, GregorianCalendar endDate, String url) throws MalformedURLException, NoConnectionException, IllegalAccessException {
+            return null;
+        }
+
+        public static Map<GregorianCalendar, ArrayList<BackportAppointment>> ImportWeekRange(GregorianCalendar startDate, GregorianCalendar endDate, BaseURL baseURL, String args) throws MalformedURLException, NoConnectionException, IllegalAccessException {
+            return null;
+        }
+
+    }
 
     private DataImporter() {}
 
@@ -52,16 +66,6 @@ public final class DataImporter {
         int urlSplit = url.indexOf(deSuffix);
         final String regularPrefix = url.substring(0, url.indexOf(cityPrefix));
 		return ImportWeekRange(startDate, endDate, BaseURL.valueOf(url.substring(regularPrefix.length() + cityPrefix.length(), urlSplit).toUpperCase()), url.substring(urlSplit + deSuffix.length()));
-    }
-
-    @Deprecated
-    public static Map<GregorianCalendar, ArrayList<Appointment>> ImportWeekRange(GregorianCalendar startDate, GregorianCalendar endDate, String url) throws MalformedURLException, NoConnectionException, IllegalAccessException {
-        Map<GregorianCalendar, ArrayList<Appointment>> converted = new HashMap<>();
-        Map<LocalDate, ArrayList<Appointment>> source = ImportWeekRange(DateUtilities.ConvertToLocalDate(startDate), DateUtilities.ConvertToLocalDate(endDate), url);
-        for(LocalDate ld : source.keySet()) {
-            converted.put(DateUtilities.ConvertToCalendar(ld), source.get(ld));
-        }
-        return converted;
     }
 
     /**
@@ -91,7 +95,10 @@ public final class DataImporter {
         String[] paramsStrings = args.split("&");
         for (String paramsString : paramsStrings) {
             String[] kvStrings = paramsString.split("=");
-            IntStream.range(0, kvStrings.length).forEach(j -> params.put(kvStrings[0], kvStrings[1]));
+            int bound = kvStrings.length;
+            for (int j = 0; j < bound; j++) {
+                params.put(kvStrings[0], kvStrings[1]);
+            }
         }
 
         // Appending only necessary parameters
@@ -122,16 +129,6 @@ public final class DataImporter {
 
 		return appointments;
 	}
-
-    @Deprecated
-    public static Map<GregorianCalendar, ArrayList<Appointment>> ImportWeekRange(GregorianCalendar startDate, GregorianCalendar endDate, BaseURL baseURL, String args) throws MalformedURLException, NoConnectionException, IllegalAccessException {
-        Map<GregorianCalendar, ArrayList<Appointment>> converted = new HashMap<>();
-        Map<LocalDate, ArrayList<Appointment>> source = ImportWeekRange(DateUtilities.ConvertToLocalDate(startDate), DateUtilities.ConvertToLocalDate(endDate), baseURL, args);
-        for(LocalDate ld : source.keySet()) {
-            converted.put(DateUtilities.ConvertToCalendar(ld), source.get(ld));
-        }
-        return converted;
-    }
 
     /**
      * Imports all events of the week

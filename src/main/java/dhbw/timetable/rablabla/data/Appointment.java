@@ -1,52 +1,40 @@
 package dhbw.timetable.rablabla.data;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 /**
- * An immutable struct concept based class for storing the appointment data of the lectures.
+ * An deep-immutable struct concept based class for storing the appointment data of the lectures.
  * 
  * Created by Hendrik Ulbrich (C) 2017
  */
-public final class Appointment {
+public final class Appointment extends Lecture {
 
-	private LocalDateTime startDate, endDate;
-	private String course, info;
+	private LocalDateTime start, end;
 
-	Appointment(LocalDateTime startDate, LocalDateTime endDate, String course, String info) {
-		this.startDate = startDate;
-		this.endDate = endDate;
-		this.course = course;
-		this.info = info;
-	}
+    public Appointment(LocalDateTime start, LocalDateTime end, String course, String info) {
+        super(course, info);
+        this.start = start;
+        this.end = end;
+    }
 
 	public String getStartTime() {
-		return startDate.format(DateTimeFormatter.ofPattern("HH:mm", Locale.GERMANY));
+		return start.format(DateUtilities.GERMAN_STD_TIMEFORMATTER());
 	}
 
 	public String getEndTime() {
-		return endDate.format(DateTimeFormatter.ofPattern("HH:mm", Locale.GERMANY));
+		return end.format(DateUtilities.GERMAN_STD_TIMEFORMATTER());
 	}
 
 	public String getDate() {
-		return endDate.format(DateTimeFormatter.ofPattern("dd.MM.yyyy", Locale.GERMANY));
+		return end.format(DateUtilities.GERMAN_STD_DATEFORMATTER());
 	}
 
 	public LocalDateTime getStartDate() {
-		return startDate;
+		return start;
 	}
 
 	public LocalDateTime getEndDate() {
-		return endDate;
-	}
-
-	public String getCourse() {
-		return course;
-	}
-
-	public String getInfo() {
-		return info;
+		return end;
 	}
 
 	@Override
