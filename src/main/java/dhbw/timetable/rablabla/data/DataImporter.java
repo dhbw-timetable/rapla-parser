@@ -55,8 +55,13 @@ public final class DataImporter {
     }
 
     @Deprecated
-    public static Map<LocalDate, ArrayList<Appointment>> ImportWeekRange(GregorianCalendar startDate, GregorianCalendar endDate, String url) throws MalformedURLException, NoConnectionException, IllegalAccessException {
-        return ImportWeekRange(DateUtilities.ConvertToLocalDate(startDate), DateUtilities.ConvertToLocalDate(endDate), url);
+    public static Map<GregorianCalendar, ArrayList<Appointment>> ImportWeekRange(GregorianCalendar startDate, GregorianCalendar endDate, String url) throws MalformedURLException, NoConnectionException, IllegalAccessException {
+        Map<GregorianCalendar, ArrayList<Appointment>> converted = new HashMap<>();
+        Map<LocalDate, ArrayList<Appointment>> source = ImportWeekRange(DateUtilities.ConvertToLocalDate(startDate), DateUtilities.ConvertToLocalDate(endDate), url);
+        for(LocalDate ld : source.keySet()) {
+            converted.put(DateUtilities.ConvertToCalendar(ld), source.get(ld));
+        }
+        return converted;
     }
 
     /**
@@ -119,8 +124,13 @@ public final class DataImporter {
 	}
 
     @Deprecated
-    public static Map<LocalDate, ArrayList<Appointment>> ImportWeekRange(GregorianCalendar startDate, GregorianCalendar endDate, BaseURL baseURL, String args) throws MalformedURLException, NoConnectionException, IllegalAccessException {
-        return ImportWeekRange(DateUtilities.ConvertToLocalDate(startDate), DateUtilities.ConvertToLocalDate(endDate), baseURL, args);
+    public static Map<GregorianCalendar, ArrayList<Appointment>> ImportWeekRange(GregorianCalendar startDate, GregorianCalendar endDate, BaseURL baseURL, String args) throws MalformedURLException, NoConnectionException, IllegalAccessException {
+        Map<GregorianCalendar, ArrayList<Appointment>> converted = new HashMap<>();
+        Map<LocalDate, ArrayList<Appointment>> source = ImportWeekRange(DateUtilities.ConvertToLocalDate(startDate), DateUtilities.ConvertToLocalDate(endDate), baseURL, args);
+        for(LocalDate ld : source.keySet()) {
+            converted.put(DateUtilities.ConvertToCalendar(ld), source.get(ld));
+        }
+        return converted;
     }
 
     /**
