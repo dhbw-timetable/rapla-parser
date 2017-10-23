@@ -8,7 +8,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
-import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -66,7 +65,7 @@ public final class DataImporter {
                 try {
                     appointments.put((TimelessDate) startDate.clone(), Backport.ImportWeek(startDate, connectionURL
                             + "&day=" + startDate.get(Calendar.DAY_OF_MONTH)
-                            + "&month=" + (startDate.get(Calendar.MONTH) - 1)
+                            + "&month=" + (startDate.get(Calendar.MONTH) + 1)
                             + "&year=" + startDate.get(Calendar.YEAR)));
                 } catch (IOException | ParserConfigurationException e) {
                     System.out.println("FAIL!" + System.lineSeparator() + "Error date: " + DateUtilities.GERMAN_STD_SDATEFORMAT.format(startDate));

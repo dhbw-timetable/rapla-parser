@@ -40,7 +40,7 @@ public class Main {
     };
 
     public static void main(String[] args)  {
-        unit_test(LocalDate.of(2016, 12, 1), LocalDate.of(2017, 1, 1));
+        unit_test(LocalDate.of(2013, 1, 1), LocalDate.of(2018, 1, 1));
     }
 
     private static void unit_test(LocalDate start, LocalDate end) {
@@ -88,13 +88,13 @@ public class Main {
             if (list1 == null || list2 == null || list1.size() != list2.size()) {
                 return false;
             }
-            for(int i = 0; i < list1.size(); i++) {
+            for (int i = 0; i < list1.size(); i++) {
                 Appointment a1 = list1.get(i);
                 BackportAppointment a2 = list2.get(i);
 
-                if(!(a1.getDate().equals(a2.getDate()) && a1.getStartTime().equals(a2.getStartTime())
-                        && a1.getEndTime().equals(a2.getEndTime()) && a1.getCourse().equals(a2.getCourse())
-                        && a1.getInfo().equals(a2.getInfo()))) {
+                if(!a1.getDate().equals(a2.getDate()) || !a1.getStartTime().equals(a2.getStartTime())
+                        || !a1.getEndTime().equals(a2.getEndTime()) || !a1.getCourse().equals(a2.getCourse())
+                        || !a1.getInfo().equals(a2.getInfo())) {
                     return false;
                 }
             }
