@@ -115,8 +115,8 @@ public final class DateUtilities {
      * @param date The date to convert
      * @return an instance of GregorianCalendar
      */
-    public static GregorianCalendar ConvertToCalendar(LocalDate date) {
-	    return ConvertToCalendar(LocalDateTime.of(date, LocalTime.MIN));
+    public static TimelessDate ConvertToCalendar(LocalDate date) {
+	    return new TimelessDate(ConvertToCalendar(LocalDateTime.of(date, LocalTime.MIN)));
     }
 
     /**
@@ -126,7 +126,7 @@ public final class DateUtilities {
      * @param date The date to convert
      * @return an instance of LocalDate
      */
-    public static LocalDate ConvertToLocalDate(GregorianCalendar date) {
+    public static LocalDate ConvertToLocalDate(TimelessDate date) {
         return date.toInstant().atZone(ZoneId.of("Europe/Berlin")).toLocalDate();
     }
 
@@ -141,13 +141,12 @@ public final class DateUtilities {
         return date.toInstant().atZone(ZoneId.of("Europe/Berlin")).toLocalDateTime();
     }
 
-    // = = = = = = = = = = = = = = = = = = = =
-
+    @Deprecated
     public final static class Backport {
 
         private Backport() {}
 
-        public static boolean IsDateOver(GregorianCalendar date, GregorianCalendar isOver) {
+        public static boolean IsDateOver(TimelessDate date, TimelessDate isOver) {
             if(date.get(Calendar.YEAR) == isOver.get(Calendar.YEAR)) {
                 if(date.get(Calendar.MONTH) == isOver.get(Calendar.MONTH)) {
                     if(date.get(Calendar.DAY_OF_MONTH) == isOver.get(Calendar.DAY_OF_MONTH)) {
@@ -163,7 +162,7 @@ public final class DateUtilities {
             }
         }
 
-        public static void NextWeek(GregorianCalendar g) {
+        public static void NextWeek(TimelessDate g) {
             AddDays(g, 7);
             Normalize(g);
         }
@@ -185,7 +184,7 @@ public final class DateUtilities {
          * @param g GregorianCalendar
          */
         @Deprecated
-        public static void Normalize_Native(GregorianCalendar g) {
+        public static void Normalize_Native(TimelessDate g) {
             g.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
         }
 
@@ -194,21 +193,21 @@ public final class DateUtilities {
          *
          * @param g GregorianCalendar
          */
-        public static void Normalize(GregorianCalendar g) {
+        public static void Normalize(TimelessDate g) {
             while(!new SimpleDateFormat("EEEE", Locale.GERMANY).format(g.getTime()).equals("Montag")){
                 Backport.SubtractDays(g, 1);
             }
         }
 
-        public static void AddDays(GregorianCalendar g, int i) {
+        public static void AddDays(TimelessDate g, int i) {
             g.add(Calendar.DAY_OF_MONTH, i);
         }
 
-        public static void SubtractDays(GregorianCalendar g, int i) {
+        public static void SubtractDays(TimelessDate g, int i) {
             g.add(Calendar.DAY_OF_YEAR, -i);
         }
 
-        public static BackportAppointment GetFirstAppointmentOfDay(ArrayList<BackportAppointment> appointments, GregorianCalendar day) {
+        public static BackportAppointment GetFirstAppointmentOfDay(ArrayList<BackportAppointment> appointments, TimelessDate day) {
             SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
             for(BackportAppointment a : appointments) {
                 // If same day
@@ -220,7 +219,7 @@ public final class DateUtilities {
             return null;
         }
 
-        public static BackportAppointment GetLastAppointmentOfDay(ArrayList<BackportAppointment> appointments, GregorianCalendar day) {
+        public static BackportAppointment GetLastAppointmentOfDay(ArrayList<BackportAppointment> appointments, TimelessDate day) {
             SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
             BackportAppointment result = null;
             for(BackportAppointment a : appointments) {
@@ -251,7 +250,7 @@ public final class DateUtilities {
             return new Integer[] { min, max };
         }
 
-        public static ArrayList<BackportAppointment> GetWeekAppointments(GregorianCalendar week, ArrayList<BackportAppointment> superList) {
+        public static ArrayList<BackportAppointment> GetWeekAppointments(TimelessDate week, ArrayList<BackportAppointment> superList) {
             ArrayList<BackportAppointment> weekAppointments = new ArrayList<>();
             if (superList != null) {
                 for (BackportAppointment a : superList) {
@@ -263,7 +262,7 @@ public final class DateUtilities {
             return weekAppointments;
         }
 
-        public static ArrayList<BackportAppointment> GetAppointmentsOfDay(GregorianCalendar day, ArrayList<BackportAppointment> list) {
+        public static ArrayList<BackportAppointment> GetAppointmentsOfDay(TimelessDate day, ArrayList<BackportAppointment> list) {
             ArrayList<BackportAppointment> dayAppointments = new ArrayList<>();
             if (list != null) {
                 String currDate = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY).format(day.getTime());
@@ -276,7 +275,7 @@ public final class DateUtilities {
             return dayAppointments;
         }
 
-        public static LinkedHashSet<BackportAppointment> GetAppointmentsOfDayAsSet(GregorianCalendar day, LinkedHashSet<BackportAppointment> list) {
+        public static LinkedHashSet<BackportAppointment> GetAppointmentsOfDayAsSet(TimelessDate day, LinkedHashSet<BackportAppointment> list) {
             LinkedHashSet<BackportAppointment> dayAppointments = new LinkedHashSet<>();
             String currDate = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY).format(day.getTime());
             for(BackportAppointment a : list) {

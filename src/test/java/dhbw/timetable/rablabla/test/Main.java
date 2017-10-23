@@ -1,8 +1,6 @@
 package dhbw.timetable.rablabla.test;
 
-import dhbw.timetable.rablabla.data.Appointment;
-import dhbw.timetable.rablabla.data.DataImporter;
-import dhbw.timetable.rablabla.data.DateUtilities;
+import dhbw.timetable.rablabla.data.*;
 import dhbw.timetable.rablabla.data.exceptions.NoConnectionException;
 
 import java.net.MalformedURLException;
@@ -42,7 +40,7 @@ public class Main {
     };
 
     public static void main(String[] args)  {
-        unit_test(LocalDate.of(2013, 1, 1), LocalDate.of(2018, 1, 1));
+        unit_test(LocalDate.of(2016, 12, 1), LocalDate.of(2017, 1, 1));
     }
 
     private static void unit_test(LocalDate start, LocalDate end) {
@@ -53,11 +51,18 @@ public class Main {
             System.out.print("Checking " + url + " ... ");
             try {
                 Map<LocalDate, ArrayList<Appointment>> data = DataImporter.ImportWeekRange(start, end, url);
-                if (debugData) {
-                    System.out.println();
-                    print(data);
+                Map<TimelessDate, ArrayList<BackportAppointment>> backportData = DataImporter.Backport.ImportWeekRange(
+                        DateUtilities.ConvertToCalendar(start), DateUtilities.ConvertToCalendar(end), url);
+                if (checkEquality(data, backportData)) {
+                    System.out.println("SUCCESS!");
+                } else {
+                    error = true;
+                    System.out.println("INVALID!");
                 }
-                System.out.println("SUCCESS!");
+                if (debugData) {
+                    print(data);
+                    print(backportData);
+                }
             } catch (NoConnectionException | MalformedURLException | IllegalAccessException e) {
                 error = true;
                 System.out.println("FAIL!");
@@ -71,14 +76,42 @@ public class Main {
         }
     }
 
-    private static void print(Map<LocalDate, ArrayList<Appointment>> data) {
+    private static boolean checkEquality(Map<LocalDate, ArrayList<Appointment>> data, Map<TimelessDate, ArrayList<BackportAppointment>> backportData) {
+        if (data == null || backportData == null || data.size() != backportData.size()) {
+            return false;
+        }
+
+        for (LocalDate dateKey : data.keySet()) {
+            ArrayList<Appointment> list1 = data.get(dateKey);
+            ArrayList<BackportAppointment> list2 = backportData.get(DateUtilities.ConvertToCalendar(dateKey));
+
+            if (list1 == null || list2 == null || list1.size() != list2.size()) {
+                return false;
+            }
+            for(int i = 0; i < list1.size(); i++) {
+                Appointment a1 = list1.get(i);
+                BackportAppointment a2 = list2.get(i);
+
+                if(!(a1.getDate().equals(a2.getDate()) && a1.getStartTime().equals(a2.getStartTime())
+                        && a1.getEndTime().equals(a2.getEndTime()) && a1.getCourse().equals(a2.getCourse())
+                        && a1.getInfo().equals(a2.getInfo()))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private static void print(Map data) {
         int size = 0;
-        for (ArrayList<Appointment> week : data.values()) {
+        for (Object oWeek : data.values()) {
+            ArrayList week = (ArrayList) oWeek;
             size += week.size();
-            for (Appointment a : week) {
+            for (Object a : week) {
                 System.out.println(a);
             }
         }
         System.out.println("Size: " + size);
     }
+
 }

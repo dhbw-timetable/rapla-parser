@@ -8,7 +8,7 @@ public class BackportAppointment extends Lecture {
 
     private GregorianCalendar start, end;
 
-    public BackportAppointment(String time, GregorianCalendar date, String course, String info) {
+    public BackportAppointment(String time, TimelessDate date, String course, String info) {
         super(course, info);
         start = (GregorianCalendar) date.clone();
         end = (GregorianCalendar) date.clone();
