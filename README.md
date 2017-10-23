@@ -24,7 +24,6 @@ Map<LocalDate, ArrayList<Appointment>> data = DataImporter.ImportWeekRange(start
 If you have to use java.util.Date API for a good reason (e.g. Android JDK and NDK not available) we provide backport methods you can use:
 ```
 Map<TimelessDate, ArrayList<Appointment>> data = DataImporter.Backport.ImportWeekRange(start, end, url)
-
 ```
 
 # Contribute
