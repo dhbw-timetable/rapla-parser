@@ -39,7 +39,7 @@ mvn clean install -Possrh
 ```
 
 ## Deploy
-Same es build but with deploy to ossrh:
+Same as build but with deploy to ossrh:
 ```
 mvn clean deploy -Possrh
 ```
