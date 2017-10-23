@@ -11,8 +11,8 @@ public class BackportAppointment extends Lecture {
 
     private GregorianCalendar start, end;
 
-    public BackportAppointment(String time, TimelessDate date, String course, String info) {
-        super(course, info);
+    public BackportAppointment(String time, TimelessDate date, String title, String persons, String resources) {
+        super(title, persons, resources);
         start = (GregorianCalendar) date.clone();
         end = (GregorianCalendar) date.clone();
 
@@ -23,8 +23,8 @@ public class BackportAppointment extends Lecture {
         end.set(Calendar.MINUTE, Integer.parseInt(times[1].split(":")[1]));
     }
 
-    public BackportAppointment(GregorianCalendar startDate, GregorianCalendar endDate, String course, String info) {
-        super(course, info);
+    public BackportAppointment(GregorianCalendar startDate, GregorianCalendar endDate, String title, String persons, String resources) {
+        super(title, persons, resources);
         this.start = (GregorianCalendar) startDate.clone();
         this.end = (GregorianCalendar) endDate.clone();
     }
@@ -57,14 +57,6 @@ public class BackportAppointment extends Lecture {
         return end;
     }
 
-    public String getCourse() {
-        return course;
-    }
-
-    public String getInfo() {
-        return info;
-    }
-
     @Override
     public boolean equals(Object o) {
         if(o != null) {
@@ -78,7 +70,7 @@ public class BackportAppointment extends Lecture {
 
     @Override
     public String toString() {
-        return getDate() + "\t"+ getStartTime() + "-" + getEndTime() + "\t" + course + "\t" + info;
+        return getDate() + "\t"+ getStartTime() + "-" + getEndTime() + "\t" + title + "\t" + persons + "\t" + resources;
     }
 
     @Override

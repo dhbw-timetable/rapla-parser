@@ -13,8 +13,8 @@ public final class Appointment extends Lecture {
 
 	private LocalDateTime start, end;
 
-    public Appointment(LocalDateTime start, LocalDateTime end, String course, String info) {
-        super(course, info);
+    public Appointment(LocalDateTime start, LocalDateTime end, String title, String persons, String resources) {
+        super(title, persons, resources);
         this.start = start;
         this.end = end;
     }
@@ -54,8 +54,9 @@ public final class Appointment extends Lecture {
 	public String toString() {
 		return new StringBuilder().append(getDate())
 				.append("\t").append(getStartTime()).append("-").append(getEndTime())
-				.append("\t").append(course)
-				.append("\t").append(info).toString();
+				.append("\t").append(title)
+				.append("\t").append(persons)
+				.append("\t").append(resources).toString();
 	}
 
 	@Override

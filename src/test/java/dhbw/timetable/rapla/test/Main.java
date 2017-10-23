@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class Main {
 
-    private static final boolean debugData = false;
+    private static final boolean debugData = true;
 
     private final static String[] test_urls = {
             "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo&day=9&month=12&year=2016&today=Heute&test=crap",
@@ -93,7 +93,7 @@ public class Main {
                 BackportAppointment a2 = list2.get(i);
 
                 if(!a1.getDate().equals(a2.getDate()) || !a1.getStartTime().equals(a2.getStartTime())
-                        || !a1.getEndTime().equals(a2.getEndTime()) || !a1.getCourse().equals(a2.getCourse())
+                        || !a1.getEndTime().equals(a2.getEndTime()) || !a1.getTitle().equals(a2.getTitle())
                         || !a1.getInfo().equals(a2.getInfo())) {
                     return false;
                 }
