@@ -4,7 +4,7 @@ This is a library for crawling timetable events from the rapla website of DHBWs.
 ## Import
 Gradle (Maven Import):
 ```
-compile 'com.github.dhbw-timetable:rapla-parser:0.2.1'
+compile 'com.github.dhbw-timetable:rapla-parser:0.2.8'
 ```
 
 Maven:
@@ -12,7 +12,7 @@ Maven:
 <dependency>
    <groupId>com.github.dhbw-timetable</groupId>
    <artifactId>rapla-parser</artifactId>
-   <version>0.2.1</version>
+   <version>0.2.8</version>
 </dependency>
 ```
 
@@ -20,6 +20,11 @@ Maven:
 You can import a range of weeks via using:
 ```
 Map<LocalDate, ArrayList<Appointment>> data = DataImporter.ImportWeekRange(start, end, url)
+```
+If you have to use java.util.Date API for a good reason (e.g. Android JDK and NDK not available) we provide backport methods you can use:
+```
+Map<TimelessDate, ArrayList<Appointment>> data = DataImporter.Backport.ImportWeekRange(start, end, url)
+
 ```
 
 # Contribute
@@ -34,7 +39,7 @@ mvn clean install -Possrh
 ```
 
 ## Deploy
-Same es build but with deploy to ossrh:
+Same as build but with deploy to ossrh:
 ```
 mvn clean deploy -Possrh
 ```
