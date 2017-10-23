@@ -157,7 +157,7 @@ public final class DataImporter {
 
             String[] description = getDescription(rows);
 
-            return new BackportAppointment(time, date, description[0], description[1]);
+            return new BackportAppointment(time, date, description[0], description[1], description[2]);
         }
 
     }
@@ -336,7 +336,7 @@ public final class DataImporter {
         String[] description = getDescription(rows);
 
         LocalDateTime[] times = DateUtilities.ConvertToTime(date, time);
-        return new Appointment(times[0], times[1], description[0], description[1]);
+        return new Appointment(times[0], times[1], description[0], description[1], description[2]);
     }
 
     private static String getTime(NodeList aChildren) {
@@ -357,7 +357,10 @@ public final class DataImporter {
         NodeList dataItems;
         Element labelElement, dataElement;
         String className;
-        StringBuilder courseBuilder = new StringBuilder(), infoBuilder = new StringBuilder(), tempBuilder = null;
+        StringBuilder titleBuilder = new StringBuilder(),
+                personsBuilder = new StringBuilder(),
+                resourcesBuilder = new StringBuilder(),
+                tempBuilder = null;
         // Handle each row of the table
         for (int i = 0; i < rows.getLength(); i++) {
             Node row = rows.item(i);
@@ -369,12 +372,14 @@ public final class DataImporter {
                 switch (labelElement.getTextContent()) {
                     case "Titel:":
                     case "Veranstaltungsname:":
-                        tempBuilder = courseBuilder;
+                        tempBuilder = titleBuilder;
+                        break;
+                    case "Personen:":
+                        tempBuilder = personsBuilder;
                         break;
                     case "Bemerkung:":
                     case "Ressourcen:":
-                    case "Personen:":
-                        tempBuilder = infoBuilder;
+                        tempBuilder = resourcesBuilder;
                         break;
                     default:
                         tempBuilder = null;
@@ -399,11 +404,11 @@ public final class DataImporter {
                 }
             }
         }
-        return new String[] { courseBuilder.toString().trim(), infoBuilder.toString().trim()};
+        return new String[] { titleBuilder.toString().trim(), personsBuilder.toString().trim(), resourcesBuilder.toString().trim() };
     }
 
     private static HashMap<String, String> getParams(String args) {
-        HashMap<String, String> params = new HashMap<String, String>();
+        HashMap<String, String> params = new HashMap<>();
         String[] paramsStrings = args.split("&");
         for (String paramsString : paramsStrings) {
             String[] kvStrings = paramsString.split("=");
