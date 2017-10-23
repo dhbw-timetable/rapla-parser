@@ -1,5 +1,20 @@
-package dhbw.timetable.rablabla.data;
+package dhbw.timetable.rapla.parser;
 
+import dhbw.timetable.rapla.date.DateUtilities;
+import dhbw.timetable.rapla.data.event.Appointment;
+import dhbw.timetable.rapla.data.event.BackportAppointment;
+import dhbw.timetable.rapla.data.time.TimelessDate;
+import dhbw.timetable.rapla.exceptions.NoConnectionException;
+import dhbw.timetable.rapla.network.BaseURL;
+import dhbw.timetable.rapla.network.NetworkUtilities;
+import org.w3c.dom.CharacterData;
+import org.w3c.dom.*;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -12,19 +27,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import dhbw.timetable.rablabla.data.exceptions.NoConnectionException;
-import org.w3c.dom.CharacterData;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 /**
  * Created by Hendrik Ulbrich (C) 2017
@@ -145,101 +147,22 @@ public final class DataImporter {
         }
 
         private static BackportAppointment importAppointment(Node block, TimelessDate date) {
-            Element labelElement, dataElement;
             // All children from the event
-            NodeList aChildren = block.getFirstChild().getChildNodes(), dataItems;
+            NodeList aChildren = block.getFirstChild().getChildNodes();
+
+            String time = getTime(aChildren);
+
             // Rows from table body
             NodeList rows = aChildren.item(aChildren.getLength() - 1).getLastChild().getChildNodes();
-            // If no time is provided, appointment is whole working day
-            String timeData, time, className;
-            StringBuilder courseBuilder = new StringBuilder(), infoBuilder = new StringBuilder(), tempBuilder = null;
 
-            // If no time is provided, event is whole working day
-            if (aChildren.item(0).getNodeType() == Node.ELEMENT_NODE) {
-                time = "08:00-18:00";
-            } else {
-                timeData = ((CharacterData) aChildren.item(0)).getData();
-                // Filter &#160; alias &nbsp;
-                time = timeData.substring(0, 5).concat(timeData.substring(6));
-            }
+            String[] description = getDescription(rows);
 
-            // Handle each row of the table
-            for (int i = 0; i < rows.getLength(); i++) {
-                Node row = rows.item(i);
-                if(row.getNodeType() == Node.ELEMENT_NODE) {
-                    dataItems = row.getChildNodes();
-                    labelElement = (Element) dataItems.item(1);
-
-                    // Get category: info or title
-                    switch (labelElement.getTextContent()) {
-                        case "Titel:":
-                        case "Veranstaltungsname:":
-                            tempBuilder = courseBuilder;
-                            break;
-                        case "Bemerkung:":
-                        case "Ressourcen:":
-                        case "Personen:":
-                            tempBuilder = infoBuilder;
-                            break;
-                        default:
-                            tempBuilder = null;
-                            // System.out.println("WARN: Unknown labelElement text content: " + labelElement.getTextContent());
-                            break;
-                    }
-
-                    if (tempBuilder != null) {
-                        // Skip label and text
-                        for (int j = 3; j < dataItems.getLength(); j++) {
-                            Node dataNode = dataItems.item(j);
-                            if (dataNode.getNodeType() == Node.ELEMENT_NODE) {
-                                dataElement = (Element) dataItems.item(j);
-                                className = dataElement.getAttribute("class");
-                                if (className.equals("value")) {
-                                    tempBuilder.append(dataElement.getTextContent()).append(" ");
-                                } else {
-                                    System.out.println("WARN: Unknown className in data table: " + className);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            return new BackportAppointment(time, date, courseBuilder.toString().trim(), infoBuilder.toString().trim());
+            return new BackportAppointment(time, date, description[0], description[1]);
         }
 
     }
 
     private DataImporter() {}
-
-    private static HashMap<String, String> getParams(String args) {
-        HashMap<String, String> params = new HashMap<String, String>();
-        String[] paramsStrings = args.split("&");
-        for (String paramsString : paramsStrings) {
-            String[] kvStrings = paramsString.split("=");
-            int bound = kvStrings.length;
-            for (String kvString : kvStrings) {
-                params.put(kvStrings[0], kvStrings[1]);
-            }
-        }
-        return params;
-    }
-
-    private static String generateConnection(HashMap<String, String> params, BaseURL baseURL) throws IllegalAccessException {
-        // Extract the parameters
-        final StringBuilder connectionURLBuilder = new StringBuilder(baseURL.complete()).append("?");
-        // Appending only necessary parameters
-        // key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo&today=Heute
-        if (params.containsKey("key")) {
-            connectionURLBuilder.append("key=").append(params.get("key"));
-            // page=calendar&user=vollmer&file=tinf15b3&today=Heute
-        } else if (params.containsKey("page") && params.get("page").equalsIgnoreCase("calendar") && params.containsKey("user") && params.containsKey("file")) {
-            connectionURLBuilder.append("page=calendar&user=").append(params.get("user")).append("&file=").append(params.get("file"));
-        } else {
-            throw new IllegalAccessException();
-        }
-        return connectionURLBuilder.toString();
-    }
 
     /**
      * Imports all appointments from the given url which are in the parameters week range
@@ -262,7 +185,7 @@ public final class DataImporter {
      * Imports all appointments from the given url data which are in the parameters week range
      * @param startDate A day of the week to start (include)
      * @param endDate A day of the week to end (include)
-     * @param baseURL The host enum dhbw.timetable.rablabla.data.BaseURL
+     * @param baseURL The host enum BaseURL
      * @param args Arguments such as key or (user page file)
      * @return Map of (LocalDate, ArrayList(Appointment)) events ordered through weeks
      * @throws MalformedURLException If the passed url does not match pattern
@@ -304,7 +227,7 @@ public final class DataImporter {
     /**
      * Imports all events of the week
      * @param localDate A day of the week to import
-     * @param connectionURL The host enum dhbw.timetable.rablabla.data.BaseURL
+     * @param connectionURL The host enum BaseURL
      * @return Unordered list of appointments scheduled for this week (not-null)
      * @throws IOException If input could not be loaded
      * @throws ParserConfigurationException If the parsing failed
@@ -402,16 +325,24 @@ public final class DataImporter {
      * @return Imported appointment
      */
 	private static Appointment importAppointment(Node block, LocalDate date) {
-        Element labelElement, dataElement;
         // All children from the event
-        NodeList aChildren = block.getFirstChild().getChildNodes(), dataItems;
+        NodeList aChildren = block.getFirstChild().getChildNodes();
+
+        String time = getTime(aChildren);
+
         // Rows from table body
         NodeList rows = aChildren.item(aChildren.getLength() - 1).getLastChild().getChildNodes();
-        // If no time is provided, appointment is whole working day
-        String timeData, time, className;
-        StringBuilder courseBuilder = new StringBuilder(), infoBuilder = new StringBuilder(), tempBuilder = null;
 
-        // If no time is provided, event is whole working day
+        String[] description = getDescription(rows);
+
+        LocalDateTime[] times = DateUtilities.ConvertToTime(date, time);
+        return new Appointment(times[0], times[1], description[0], description[1]);
+    }
+
+    private static String getTime(NodeList aChildren) {
+        // If no event is provided, appointment is whole working day
+        String timeData, time;
+        // If no event is provided, event is whole working day
         if (aChildren.item(0).getNodeType() == Node.ELEMENT_NODE) {
             time = "08:00-18:00";
         } else {
@@ -419,7 +350,14 @@ public final class DataImporter {
             // Filter &#160; alias &nbsp;
             time = timeData.substring(0, 5).concat(timeData.substring(6));
         }
+        return time;
+    }
 
+    private static String[] getDescription(NodeList rows) {
+        NodeList dataItems;
+        Element labelElement, dataElement;
+        String className;
+        StringBuilder courseBuilder = new StringBuilder(), infoBuilder = new StringBuilder(), tempBuilder = null;
         // Handle each row of the table
         for (int i = 0; i < rows.getLength(); i++) {
             Node row = rows.item(i);
@@ -461,9 +399,36 @@ public final class DataImporter {
                 }
             }
         }
+        return new String[] { courseBuilder.toString().trim(), infoBuilder.toString().trim()};
+    }
 
-        LocalDateTime[] times = DateUtilities.ConvertToTime(date, time);
-        return new Appointment(times[0], times[1], courseBuilder.toString().trim(), infoBuilder.toString().trim());
+    private static HashMap<String, String> getParams(String args) {
+        HashMap<String, String> params = new HashMap<String, String>();
+        String[] paramsStrings = args.split("&");
+        for (String paramsString : paramsStrings) {
+            String[] kvStrings = paramsString.split("=");
+            int bound = kvStrings.length;
+            for (String kvString : kvStrings) {
+                params.put(kvStrings[0], kvStrings[1]);
+            }
+        }
+        return params;
+    }
+
+    private static String generateConnection(HashMap<String, String> params, BaseURL baseURL) throws IllegalAccessException {
+        // Extract the parameters
+        final StringBuilder connectionURLBuilder = new StringBuilder(baseURL.complete()).append("?");
+        // Appending only necessary parameters
+        // key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo&today=Heute
+        if (params.containsKey("key")) {
+            connectionURLBuilder.append("key=").append(params.get("key"));
+            // page=calendar&user=vollmer&file=tinf15b3&today=Heute
+        } else if (params.containsKey("page") && params.get("page").equalsIgnoreCase("calendar") && params.containsKey("user") && params.containsKey("file")) {
+            connectionURLBuilder.append("page=calendar&user=").append(params.get("user")).append("&file=").append(params.get("file"));
+        } else {
+            throw new IllegalAccessException();
+        }
+        return connectionURLBuilder.toString();
     }
 
 }

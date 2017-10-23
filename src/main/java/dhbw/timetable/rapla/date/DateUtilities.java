@@ -1,4 +1,7 @@
-package dhbw.timetable.rablabla.data;
+package dhbw.timetable.rapla.date;
+
+import dhbw.timetable.rapla.data.event.BackportAppointment;
+import dhbw.timetable.rapla.data.time.TimelessDate;
 
 import java.text.SimpleDateFormat;
 import java.time.*;
@@ -55,10 +58,10 @@ public final class DateUtilities {
 	}
 
     /**
-     * Converts a time range and a day into two LocalDateTime elements.
+     * Converts a event range and a day into two LocalDateTime elements.
      *
      * @param date The day of the two times
-     * @param times A time range in form 12:00-14:00
+     * @param times A event range in form 12:00-14:00
      * @return LocalDateTime[] with two elements
      */
 	public static LocalDateTime[] ConvertToTime(LocalDate date, String times) {
@@ -73,7 +76,7 @@ public final class DateUtilities {
 	}
 
 	/**
-	 * Converts java.time.LocalDateTime objects to java.util.Date objects
+	 * Converts java.event.LocalDateTime objects to java.util.Date objects
 	 * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
 	 *
 	 * @param date the date to convert
@@ -84,7 +87,7 @@ public final class DateUtilities {
     }
 
     /**
-     * Converts java.time.LocalDate objects to java.util.Date objects
+     * Converts java.event.LocalDate objects to java.util.Date objects
      * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
      *
      * @param date the date to convert
@@ -95,7 +98,7 @@ public final class DateUtilities {
     }
 
     /**
-     * Converts java.time.LocalDateTime objects to calendar objects
+     * Converts java.event.LocalDateTime objects to calendar objects
      * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
      *
      * @param date The date to convert
@@ -109,7 +112,7 @@ public final class DateUtilities {
     }
 
     /**
-     * Converts java.time.LocalDate objects to calendar objects
+     * Converts java.event.LocalDate objects to calendar objects
      * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
      *
      * @param date The date to convert
@@ -120,7 +123,7 @@ public final class DateUtilities {
     }
 
     /**
-     * Converts calendar objects to java.time.LocalDateTime objects
+     * Converts calendar objects to java.event.LocalDateTime objects
      * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
      *
      * @param date The date to convert
@@ -131,7 +134,7 @@ public final class DateUtilities {
     }
 
     /**
-     * Converts calendar objects to java.time.LocalDateTime objects
+     * Converts calendar objects to java.event.LocalDateTime objects
      * using TimeZone Europe/Berlin and Locale.Germany. (ignores seconds)
      *
      * @param date The date to convert

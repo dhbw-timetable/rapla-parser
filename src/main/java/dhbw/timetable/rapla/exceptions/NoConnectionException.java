@@ -1,4 +1,4 @@
-package dhbw.timetable.rablabla.data.exceptions;
+package dhbw.timetable.rapla.exceptions;
 
 /**
  * Created by Hendrik Ulbrich (C) 2017

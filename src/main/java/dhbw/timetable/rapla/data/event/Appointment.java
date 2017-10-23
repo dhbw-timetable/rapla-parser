@@ -1,4 +1,6 @@
-package dhbw.timetable.rablabla.data;
+package dhbw.timetable.rapla.data.event;
+
+import dhbw.timetable.rapla.date.DateUtilities;
 
 import java.time.LocalDateTime;
 

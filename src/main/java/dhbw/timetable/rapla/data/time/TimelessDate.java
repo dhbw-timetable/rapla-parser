@@ -1,4 +1,6 @@
-package dhbw.timetable.rablabla.data;
+package dhbw.timetable.rapla.data.time;
+
+import dhbw.timetable.rapla.date.DateUtilities;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;

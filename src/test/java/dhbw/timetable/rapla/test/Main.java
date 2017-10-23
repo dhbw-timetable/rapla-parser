@@ -1,7 +1,11 @@
-package dhbw.timetable.rablabla.test;
+package dhbw.timetable.rapla.test;
 
-import dhbw.timetable.rablabla.data.*;
-import dhbw.timetable.rablabla.data.exceptions.NoConnectionException;
+import dhbw.timetable.rapla.date.DateUtilities;
+import dhbw.timetable.rapla.data.event.Appointment;
+import dhbw.timetable.rapla.data.event.BackportAppointment;
+import dhbw.timetable.rapla.data.time.TimelessDate;
+import dhbw.timetable.rapla.exceptions.NoConnectionException;
+import dhbw.timetable.rapla.parser.DataImporter;
 
 import java.net.MalformedURLException;
 import java.time.LocalDate;
@@ -14,28 +18,24 @@ public class Main {
     private static final boolean debugData = false;
 
     private final static String[] test_urls = {
-            "http://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo",
             "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo&day=9&month=12&year=2016&today=Heute&test=crap",
 
-            "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhAWXw8wYxzdc8a_Gx7NBrcf",
             "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhAWXw8wYxzdc8a_Gx7NBrcf&day=9&month=12&year=2016&today=Heute&test=crap",
 
-            "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCdjALVplAQk2X4GqU-cLG6",
             "http://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCdjALVplAQk2X4GqU-cLG6&day=9&month=12&year=2016&today=Heute&test=crap",
 
-            "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCRWwKk8VgrnjjdW94d4cBX",
             "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCRWwKk8VgrnjjdW94d4cBX&day=9&month=12&year=2016&today=Heute&test=crap",
 
-            "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhB0mnNDNmJOne3oQwbsmD-7",
             "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhB0mnNDNmJOne3oQwbsmD-7&day=9&month=12&year=2016&today=Heute&test=crap",
 
-            "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCoRaEDgu02i2mi9JJCMzhf",
-            "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCoRaEDgu02i2mi9JJCMzhf&day=9&month=12&year=2016&today=Heute&test=crap",
+            "http://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCoRaEDgu02i2mi9JJCMzhf&day=9&month=12&year=2016&today=Heute&test=crap",
 
-            "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhAFY7E6cFyNu-AINyZP2Og4",
             "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhAFY7E6cFyNu-AINyZP2Og4&day=9&month=12&year=2016&today=Heute&test=crap",
 
-            "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=vollmer&file=tinf15b3",
+            "https://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhCSKRwgs9mGagYZS1i6SRu2&day=5&month=3&year=2017&next=%3E%3E",
+
+            "http://rapla.dhbw-stuttgart.de/rapla?key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhAN4vmf5B34HGBp-zBPYkE3&day=5&month=3&year=2017&next=%3E%3E",
+
             "https://rapla.dhbw-karlsruhe.de/rapla?page=calendar&user=vollmer&file=tinf15b3&day=26&month=6&year=2017&goto=Datum+anzeigen&test=crap",
     };
 

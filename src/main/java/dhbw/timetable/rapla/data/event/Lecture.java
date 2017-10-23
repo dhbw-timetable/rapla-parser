@@ -1,4 +1,4 @@
-package dhbw.timetable.rablabla.data;
+package dhbw.timetable.rapla.data.event;
 
 public abstract class Lecture {
 

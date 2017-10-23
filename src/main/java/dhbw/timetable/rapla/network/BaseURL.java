@@ -1,4 +1,4 @@
-package dhbw.timetable.rablabla.data;
+package dhbw.timetable.rapla.network;
 
 /**
  * Created by Hendrik Ulbrich (C) 2017
