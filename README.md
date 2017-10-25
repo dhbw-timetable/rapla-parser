@@ -4,15 +4,15 @@ This is a library for crawling timetable events from the rapla website of DHBWs.
 ## Import
 Gradle (Maven Import):
 ```
-compile 'com.github.dhbw-timetable:rapla-parser:0.3.0'
+compile 'com.github.dhbw-timetable:rapla-parser:0.3.1'
 ```
 
 Maven:
-```
+```xml
 <dependency>
    <groupId>com.github.dhbw-timetable</groupId>
    <artifactId>rapla-parser</artifactId>
-   <version>0.3.0</version>
+   <version>0.3.1</version>
 </dependency>
 ```
 
@@ -33,12 +33,12 @@ You are free to customize this library for your own under the given MIT License.
 ## Build
 Generate GPG keys and login to ossrh.
 Use the maven profile to build the library:
-```
-mvn clean install -Possrh
+```bash
+$ mvn clean install -Possrh
 ```
 
 ## Deploy
 Same as build but with deploy to ossrh:
-```
-mvn clean deploy -Possrh
+```bash
+$ mvn clean deploy -Possrh
 ```
