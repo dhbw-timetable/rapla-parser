@@ -202,9 +202,9 @@ public final class DataImporter {
 	    startDate = DateUtilities.Normalize(startDate);
 		endDate = DateUtilities.Normalize(endDate);
 
-        HashMap<String, String> params = getParams(args);
+        HashMap<String, String> params = NetworkUtilities.getParams(args);
 
-        String connectionURL = generateConnection(params, baseURL);
+        String connectionURL = NetworkUtilities.generateConnection(params, baseURL);
 
         // Request every week and put them into the map
 		do {
@@ -405,35 +405,6 @@ public final class DataImporter {
             }
         }
         return new String[] { titleBuilder.toString().trim(), personsBuilder.toString().trim(), resourcesBuilder.toString().trim() };
-    }
-
-    private static HashMap<String, String> getParams(String args) {
-        HashMap<String, String> params = new HashMap<>();
-        String[] paramsStrings = args.split("&");
-        for (String paramsString : paramsStrings) {
-            String[] kvStrings = paramsString.split("=");
-            int bound = kvStrings.length;
-            for (String kvString : kvStrings) {
-                params.put(kvStrings[0], kvStrings[1]);
-            }
-        }
-        return params;
-    }
-
-    private static String generateConnection(HashMap<String, String> params, BaseURL baseURL) throws IllegalAccessException {
-        // Extract the parameters
-        final StringBuilder connectionURLBuilder = new StringBuilder(baseURL.complete()).append("?");
-        // Appending only necessary parameters
-        // key=txB1FOi5xd1wUJBWuX8lJhGDUgtMSFmnKLgAG_NVMhA_bi91ugPaHvrpxD-lcejo&today=Heute
-        if (params.containsKey("key")) {
-            connectionURLBuilder.append("key=").append(params.get("key"));
-            // page=calendar&user=vollmer&file=tinf15b3&today=Heute
-        } else if (params.containsKey("page") && params.get("page").equalsIgnoreCase("calendar") && params.containsKey("user") && params.containsKey("file")) {
-            connectionURLBuilder.append("page=calendar&user=").append(params.get("user")).append("&file=").append(params.get("file"));
-        } else {
-            throw new IllegalAccessException();
-        }
-        return connectionURLBuilder.toString();
     }
 
 }
