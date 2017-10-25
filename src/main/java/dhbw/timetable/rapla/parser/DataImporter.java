@@ -58,9 +58,9 @@ public final class DataImporter {
             DateUtilities.Backport.Normalize(startDate);
             DateUtilities.Backport.Normalize(endDate);
 
-            HashMap<String, String> params = getParams(args);
+            HashMap<String, String> params = NetworkUtilities.getParams(args);
 
-            String connectionURL = generateConnection(params, baseURL);
+            String connectionURL = NetworkUtilities.generateConnection(params, baseURL);
 
             // Request every week and put them into the map
             do {
@@ -341,12 +341,19 @@ public final class DataImporter {
 
     private static String getTime(NodeList aChildren) {
         // If no event is provided, appointment is whole working day
-        String timeData, time;
+        String timeData, time = "99:99-99:99";
+        Node firstElNode = aChildren.item(0);
         // If no event is provided, event is whole working day
-        if (aChildren.item(0).getNodeType() == Node.ELEMENT_NODE) {
-            time = "08:00-18:00";
-        } else {
-            timeData = ((CharacterData) aChildren.item(0)).getData();
+        if (firstElNode.getNodeType() == Node.ELEMENT_NODE) {
+            Element el = (Element) firstElNode;
+            String tagName  = el.getTagName();
+            if (tagName.equals("span") && el.getAttribute("class" ).equals("link")) {
+                time = getTime(firstElNode.getChildNodes());
+            } else {
+                time = "08:00-18:00";
+            }
+        } else if (firstElNode.getNodeType() == Node.TEXT_NODE){
+            timeData = ((CharacterData) firstElNode).getData();
             // Filter &#160; alias &nbsp;
             time = timeData.substring(0, 5).concat(timeData.substring(6));
         }
