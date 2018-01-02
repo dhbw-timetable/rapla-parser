@@ -41,8 +41,10 @@ public final class NetworkUtilities {
 		HashMap<String, String> params = new HashMap<>();
 		String[] paramsStrings = args.split("&");
 		for (String paramsString : paramsStrings) {
-			String[] kvStrings = paramsString.split("=");
-			params.put(kvStrings[0], kvStrings[1]);
+			if (paramsString.contains("=")) {
+                String[] kvStrings = paramsString.split("=");
+                params.put(kvStrings[0], kvStrings[1]);
+            }
 		}
 		return params;
 	}

@@ -10,7 +10,7 @@ public enum BaseURL {
     private final String text;
 
     /**
-     * @param text stuttgart, karlaruhe or mannheim
+     * @param text stuttgart, karlsruhe or mannheim
      */
     private BaseURL(final String text) {
         this.text = text;
