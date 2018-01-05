@@ -9,8 +9,11 @@ import dhbw.timetable.rapla.parser.DataImporter;
 
 import java.net.MalformedURLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Map;
 
 public class Main {
@@ -69,6 +72,16 @@ public class Main {
                 e.printStackTrace();
             }
         }
+
+        // Check for trivial equality
+        Appointment a = new Appointment(LocalDateTime.MIN, LocalDateTime.MAX, "Title", "Persons", "Resources");
+        BackportAppointment ba = new BackportAppointment((GregorianCalendar)Calendar.getInstance(), (GregorianCalendar)Calendar.getInstance(),
+                "title", "persons", "resources");
+        if(!error && (!a.equals(a) || !ba.equals(ba))) {
+            error = true;
+            System.err.println("Data structures equals not working");
+        }
+
         if (error) {
             System.out.println("Main finished with errors :(");
         } else {

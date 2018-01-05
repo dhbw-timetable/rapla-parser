@@ -60,8 +60,8 @@ public class BackportAppointment extends Lecture {
     @Override
     public boolean equals(Object o) {
         if(o != null) {
-            if (o instanceof Appointment) {
-                Appointment that = (Appointment) o;
+            if (o instanceof BackportAppointment) {
+                BackportAppointment that = (BackportAppointment) o;
                 return that.toString().equals(this.toString());
             }
         }
